@@ -1,0 +1,16 @@
+{
+  "name": "wow-lua-scripting-service",
+  "version": "1.0.0",
+  "description": "WoW Lua Scripting Service web application",
+  "main": "wowlua.js",
+  "scripts": {
+    "start": "netlify dev",
+    "build": "# Add build script if needed"
+  },
+  "dependencies": {
+    "node-fetch": "^3.2.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^8.0.0"
+  }
+}

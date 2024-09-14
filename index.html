@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WoW Lua Scripting Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>WoW Lua Scripting Service</h1>
+        </header>
+        <main>
+            <div class="button-container">
+                <button id="newCustomerBtn" class="btn">New Customer</button>
+                <button id="luaScriptIssueBtn" class="btn">Lua Script Issue</button>
+            </div>
+        </main>
+
+        <div id="newCustomerModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>New Customer Information</h2>
+                <form id="newCustomerForm">
+                    <input type="text" id="referral" placeholder="Referral Discord Name or Email">
+                    <input type="text" id="discordName" placeholder="Your Discord Name" required>
+                    <input type="email" id="email" placeholder="PayPal Email (if applicable)" required>
+                    <select id="server" required>
+                        <option value="">Select Server</option>
+                        <option value="trinitycore">TrinityCore</option>
+                        <option value="azerothcore">AzerothCore</option>
+                    </select>
+                    <select id="scriptType" required>
+                        <option value="">Select Script Type</option>
+                        <option value="boss">Boss script</option>
+                        <option value="player">Player script</option>
+                        <option value="system">System script</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <input type="text" id="otherScriptType" placeholder="Specify Other Script Type" style="display: none;">
+                    <textarea id="description" placeholder="Describe your script in detail" required></textarea>
+                    <button type="submit" class="btn">Start Chat</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="luaScriptIssueModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Lua Script Issue</h2>
+                <form id="issueForm">
+                    <input type="text" id="scriptName" placeholder="Script Name" required>
+                    <input type="text" id="discordName" placeholder="Discord Name" required>
+                    <input type="email" id="email" placeholder="Email" required>
+                    <select id="server" required>
+                        <option value="">Select Server</option>
+                        <option value="trinitycore">Trinity Core</option>
+                        <option value="azerothcore">Azeroth Core</option>
+                    </select>
+                    <select id="scriptType" required>
+                        <option value="">Select Script Type</option>
+                        <option value="boss">Boss script</option>
+                        <option value="player">Player script</option>
+                        <option value="system">System script</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <input type="text" id="otherScriptType" placeholder="Specify Other Script Type" style="display: none;">
+                    <textarea id="issueDescription" placeholder="Describe your issue" required></textarea>
+                    <button type="submit" class="btn">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="chatWindow" class="chat-window">
+            <span class="close">&times;</span>
+            <h3 id="chatTitle"></h3>
+            <div id="chatMessages" class="chat-messages"></div>
+            <input type="text" id="chatInput" placeholder="Type your message...">
+            <button id="sendChatBtn" class="btn">Send</button>
+        </div>
+    </div>
+    <script src="wowlua.js"></script>
+</body>
+</html>
