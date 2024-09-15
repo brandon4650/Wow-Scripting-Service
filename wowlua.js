@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatWindow = document.getElementById('chatWindow');
     const chatInput = document.getElementById('chatInput');
     const sendChatBtn = document.getElementById('sendChatBtn');
-    const scriptTypeSelect = document.querySelector('select[name="scriptType"]');
-    const otherScriptTypeInput = document.querySelector('input[name="otherScriptType"]');
+    const scriptTypeSelect = document.querySelector('#issueScriptType');
+    const otherScriptTypeInput = document.querySelector('#issueOtherScriptType');
 
     let currentThreadId, currentChatTitle, currentUserName;
     let lastMessageId = null;

@@ -51,25 +51,39 @@
                 <span class="close">&times;</span>
                 <h2>Lua Script Issue</h2>
                 <form id="issueForm">
-                    <input type="text" id="scriptName" placeholder="Script Name" required>
-                    <input type="text" id="discordName" placeholder="Discord Name" required>
-                    <input type="email" id="email" placeholder="Email" required>
-                    <select id="server" required>
-                        <option value="">Select Server</option>
-                        <option value="trinitycore">Trinity Core</option>
-                        <option value="azerothcore">Azeroth Core</option>
+                    <label for="issueScriptName">Script Name:</label>
+                    <input type="text" id="issueScriptName" name="scriptName" required>
+                  
+                    <label for="issueDiscordName">Discord Name:</label>
+                    <input type="text" id="issueDiscordName" name="discordName" required>
+                  
+                    <label for="issueEmail">Email:</label>
+                    <input type="email" id="issueEmail" name="email" required>
+                  
+                    <label for="issueServer">Server:</label>
+                    <select id="issueServer" name="server" required>
+                      <option value="">Select Server</option>
+                      <option value="Trinity Core">Trinity Core</option>
+                      <option value="Azeroth Core">Azeroth Core</option>
                     </select>
-                    <select id="scriptType" required>
-                        <option value="">Select Script Type</option>
-                        <option value="boss">Boss script</option>
-                        <option value="player">Player script</option>
-                        <option value="system">System script</option>
-                        <option value="other">Other</option>
+                  
+                    <label for="issueScriptType">Script Type:</label>
+                    <select id="issueScriptType" name="scriptType" required>
+                      <option value="">Select Script Type</option>
+                      <option value="Boss script">Boss script</option>
+                      <option value="Player script">Player script</option>
+                      <option value="System script">System script</option>
+                      <option value="other">Other</option>
                     </select>
-                    <input type="text" id="otherScriptType" placeholder="Specify Other Script Type" style="display: none;">
-                    <textarea id="issueDescription" placeholder="Describe your issue" required></textarea>
-                    <button type="submit" class="btn">Submit</button>
-                </form>
+                  
+                    <label for="issueOtherScriptType">Other Script Type:</label>
+                    <input type="text" id="issueOtherScriptType" name="otherScriptType">
+                  
+                    <label for="issueDescription">Issue Description:</label>
+                    <textarea id="issueDescription" name="issueDescription" required></textarea>
+                  
+                    <button type="submit">Submit</button>
+                  </form>
             </div>
         </div>
 
