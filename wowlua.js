@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     newCustomerForm.addEventListener('submit', async (e) => {
+        console.log('Form data:', customerData);
+        console.log('Discord Name:', customerData.discordName);
         e.preventDefault();
         const formData = new FormData(newCustomerForm);
         const customerData = Object.fromEntries(formData.entries());
@@ -75,6 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function initializeChat(threadId, chatTitle, userName) {
+        console.log('Thread ID:', threadId);
+        console.log('Chat Title:', chatTitle);
+        console.log('User Name:', userName);
         chatWindow.style.display = 'flex'; // Show the chat window
         const chatTitleElement = document.getElementById('chatTitle');
         chatTitleElement.textContent = chatTitle;
