@@ -24,11 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     newCustomerForm.addEventListener('submit', async (e) => {
-        console.log('Form data:', customerData);
-        console.log('Discord Name:', customerData.discordName);
         e.preventDefault();
         const formData = new FormData(newCustomerForm);
         const customerData = Object.fromEntries(formData.entries());
+    
+        console.log('Form data:', customerData);
+        console.log('Discord Name:', customerData.discordName);
         
         try {
             const response = await fetch('/.netlify/functions/createNewCustomerThread', {
