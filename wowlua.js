@@ -160,14 +160,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorData.error || 'Failed to fetch messages');
             }
      
-            const messages = await response.json();
-            if (messages.length > 0) {
-                console.log('Fetched new messages:', messages);
-                messages.forEach(msg => {
-                    addMessageToChat(msg.sender, msg.content, false, msg.isDiscord, msg.isDiscordUser);
-                    lastMessageTimestamp = Math.max(lastMessageTimestamp, msg.timestamp);
-                });
-            }
+            const messages = response.data
+            .filter(msg => msg.author.username !== 'Lua Script Services')
+            .map(msg => ({
+                sender: msg.author.username,
+                content: msg.content,
+                timestamp: new Date(msg.timestamp).getTime(),
+                isDiscord: true,
+                isDiscordUser: msg.author.username !== userName
+            }));
+            
         } catch (error) {
             if (retries > 0) {
                 console.log(`Retrying fetch... (${retries} attempts left)`);

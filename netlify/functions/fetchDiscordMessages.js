@@ -34,16 +34,19 @@ exports.handler = async (event, context) => {
             params: params
         });
 
+        console.log('Raw Discord response:', JSON.stringify(response.data, null, 2));
+
         const messages = response.data
+            .filter(msg => msg.author.username !== 'Lua Script Services')
             .map(msg => ({
                 sender: msg.author.username,
                 content: msg.content,
                 timestamp: new Date(msg.timestamp).getTime(),
                 isDiscord: true,
-                isDiscordUser: msg.author.username !== userName && msg.author.username !== 'Lua Script Services'
+                isDiscordUser: msg.author.username !== userName
             }));
 
-        console.log(`Fetched ${messages.length} messages`);
+        console.log(`Processed ${messages.length} messages:`, JSON.stringify(messages, null, 2));
 
         return {
             statusCode: 200,
@@ -51,6 +54,9 @@ exports.handler = async (event, context) => {
         };
     } catch (error) {
         console.error('Error details:', error);
+        if (error.response) {
+            console.error('Discord API response:', error.response.data);
+        }
         return {
             statusCode: error.response?.status || 500,
             body: JSON.stringify({ 

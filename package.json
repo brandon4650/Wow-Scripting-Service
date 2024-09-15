@@ -6,12 +6,12 @@
   "type": "module",
   "scripts": {
     "start": "netlify dev",
-    "build": "echo 'No build step needed'",
-    "postinstall": "npm install -g netlify-cli"
+    "build": "echo 'No build step needed'"
   },
   "dependencies": {
     "axios": "^1.7.7",
-    "node-fetch": "^2.6.12"
+    "node-fetch": "^2.6.12",
+    "discord.js": "^13.6.0"
   },
   "devDependencies": {
     "netlify-cli": "^15.9.1"
