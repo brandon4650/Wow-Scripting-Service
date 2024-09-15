@@ -230,7 +230,7 @@ input, select, textarea {
 .chat-window {
     width: 350px;  
     height: 450px;
-    display: flex;
+    display: hidden;
     flex-direction: column; /* Enables pushing the input area to the bottom */
 }
 
