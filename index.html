@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/favicon.png" sizes="32x32">
     <title>WoW Lua Scripting Service</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -10,6 +11,7 @@
 <body>
     <div class="container">
         <header>
+            <img src="images/favicon.png" alt="WoW Lua Scripting Icon" class="logo-img">
             <h1>WoW Lua Scripting Service</h1>
         </header>
         <main>
@@ -93,8 +95,11 @@
             <div id="chatMessages" class="chat-messages"></div>
             <div class="chat-input-container">
                 <input type="text" id="chatInput" placeholder="Type your message...">
-                <button id="sendChatBtn" class="btn">Send</button>
+                <button id="sendChatBtn">Send</button>
+                <input type="file" id="fileUpload" accept=".lua,.txt" style="display: none;">
+                <button id="uploadBtn">Upload File</button>
             </div>
+            <div id="uploadedFiles" class="uploaded-files"></div>
         </div>
     </div>
     

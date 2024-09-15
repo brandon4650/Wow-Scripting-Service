@@ -32,6 +32,35 @@ header {
     margin-bottom: 40px;
 }
 
+img {
+    /* Basic properties */
+    width: 250px;      /* Set width to your preference */
+    height: auto;      /* Automatically adjust height to maintain aspect ratio */
+    margin: 0px auto; /* Center the image and add margin */
+    display: block;    /* Makes sure the image is treated like a block element */
+    
+    /* Border and shadow */
+    /*border: 2px solid #000;        /* Black border, adjust thickness and color */
+    /*border-radius: 10px;           /* Rounded corners */
+    /*box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
+
+    /* Image effects */
+    transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth transitions for hover effects */
+    opacity: 1;                  /* Fully visible by default */
+
+    /* Optional filters for effects */
+    filter: grayscale(0%);        /* No grayscale by default */
+}
+
+img:hover {
+    /* Hover effects */
+    transform: scale(1.1);        /* Slightly zooms in when hovered */
+    opacity: 0.8;                 /* Reduces opacity on hover */
+    filter: grayscale(50%);      /* Turns the image grayscale on hover */
+}
+
+
+
 h1 {
     font-family: 'Cinzel Decorative', cursive;
     font-size: 2.5em;
@@ -201,7 +230,7 @@ input, select, textarea {
     display: flex;
     padding: 10px;
     background-color: #1a1a3a;
-    margin-top: auto; /* Pushes the input area to the bottom */
+    margin-top: auto;
 }
 
 #chatInput {
@@ -212,10 +241,10 @@ input, select, textarea {
     background-color: #3a3a5a;
     color: var(--text-color);
     font-size: 0.9em;
+    margin-right: 5px;
 }
 
-#sendChatBtn {
-    margin-left: 10px;
+#sendChatBtn, #uploadBtn {
     padding: 8px 15px;
     background-color: var(--primary-color);
     color: var(--text-color);
@@ -223,6 +252,32 @@ input, select, textarea {
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
+    margin-left: 5px;
+}
+
+.uploaded-files {
+    padding: 10px;
+    background-color: #2a2a4a;
+    border-top: 1px solid var(--secondary-color);
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 5px;
+    background-color: #3a3a5a;
+    border-radius: 4px;
+}
+
+.file-item button {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 2px 5px;
+    cursor: pointer;
 }
 
 #chatTitle {

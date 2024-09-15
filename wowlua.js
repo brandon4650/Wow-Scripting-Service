@@ -164,6 +164,61 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage(message);
         }
     };
+
+    const fileUpload = document.getElementById('fileUpload');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadedFiles = document.getElementById('uploadedFiles');
+
+    uploadBtn.addEventListener('click', () => {
+        fileUpload.click();
+    });
+
+    fileUpload.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const fileContent = e.target.result;
+                const fileName = file.name;
+                addFileToChat(fileName, fileContent);
+            };
+            reader.readAsText(file);
+        }
+    });
+
+    function addFileToChat(fileName, fileContent) {
+        const fileItem = document.createElement('div');
+        fileItem.classList.add('file-item');
+        fileItem.innerHTML = `
+            <span>${fileName}</span>
+            <button onclick="sendFile('${fileName}', '${encodeURIComponent(fileContent)}')">Send</button>
+        `;
+        uploadedFiles.appendChild(fileItem);
+    }
+
+    window.sendFile = async (fileName, fileContent) => {
+        try {
+            const response = await fetch('/.netlify/functions/sendFileToDiscord', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    threadId: currentThreadId,
+                    userName: currentUserName,
+                    fileName: fileName,
+                    fileContent: decodeURIComponent(fileContent)
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to send file');
+            }
+
+            addMessageToChat(currentUserName, `Sent file: ${fileName}`, true);
+        } catch (error) {
+            console.error('Error sending file:', error);
+            addMessageToChat('System', 'Failed to send file. Please try again later.');
+        }
+    };
     
     function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false) {
         const chatMessages = document.getElementById('chatMessages');
