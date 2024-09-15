@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 exports.handler = async (event, context) => {
-  const { threadId } = JSON.parse(event.body);
+  const { threadId, after } = JSON.parse(event.body);
   const discordBotToken = process.env.DISCORD_TOKEN;
 
   if (!discordBotToken) {
@@ -14,7 +14,7 @@ exports.handler = async (event, context) => {
 
   console.log('Attempting to fetch messages for threadId:', threadId);
 
-  const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
+  const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages?after=${after}`;
 
   try {
     const response = await axios.get(discordApiUrl, {
@@ -24,11 +24,10 @@ exports.handler = async (event, context) => {
       },
     });
 
-    console.log('Discord API Response:', response.status, response.statusText);
-
     const messages = response.data.map(msg => ({
       sender: msg.author.username,
       content: msg.content,
+      timestamp: new Date(msg.timestamp).getTime()
     }));
 
     return {

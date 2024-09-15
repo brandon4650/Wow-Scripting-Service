@@ -131,33 +131,37 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     
         // Function to fetch messages from Discord and update chat
+        let lastMessageTimestamp = 0;
+
         async function fetchMessages() {
-            try {
-              console.log('Fetching messages for threadId:', threadId);
-              const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ threadId: threadId }),
-              });
-          
-              if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error response from fetchDiscordMessages:', errorData);
-                throw new Error(errorData.error || 'Failed to fetch messages');
-              }
-          
-              const messages = await response.json();
-              console.log('Fetched messages:', messages);
+          try {
+            console.log('Fetching messages for threadId:', threadId);
+            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ threadId: threadId, after: lastMessageTimestamp }),
+            });
+        
+            if (!response.ok) {
+              const errorData = await response.json();
+              console.error('Error response from fetchDiscordMessages:', errorData);
+              throw new Error(errorData.error || 'Failed to fetch messages');
+            }
+        
+            const messages = await response.json();
+            if (messages.length > 0) {
+              console.log('Fetched new messages:', messages);
               messages.forEach(msg => {
                 addMessageToChat(msg.sender, msg.content);
+                lastMessageTimestamp = Math.max(lastMessageTimestamp, msg.timestamp);
               });
-            } catch (error) {
-              console.error('Error in fetchMessages:', error);
-              addMessageToChat('System', 'Failed to load messages. Please try again later.');
             }
+          } catch (error) {
+            console.error('Error in fetchMessages:', error);
           }
-    
-        // Poll for new messages every 5 seconds
+        }
+        fetchMessages();
+        // Fetch messages every 5 seconds
         setInterval(fetchMessages, 5000);
     
         // Simulate initial greeting message
