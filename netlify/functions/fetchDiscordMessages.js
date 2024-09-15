@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 exports.handler = async (event, context) => {
-  const { threadId, after } = JSON.parse(event.body);
+    const { threadId, after } = JSON.parse(event.body);
   const discordBotToken = process.env.DISCORD_TOKEN;
 
   if (!discordBotToken) {
@@ -14,7 +14,7 @@ exports.handler = async (event, context) => {
 
   console.log('Attempting to fetch messages for threadId:', threadId);
 
-  const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages?after=${after}`;
+  const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages?after=${after}&limit=100`;
 
   try {
     const response = await axios.get(discordApiUrl, {
@@ -25,26 +25,20 @@ exports.handler = async (event, context) => {
     });
 
     const messages = response.data
-      .filter(msg => msg.author.username !== 'Lua Script Services')
+      .filter(msg => msg.author.username !== 'Lua Script Services') // Filter out bot messages
       .map(msg => ({
         sender: msg.author.username,
         content: msg.content,
         timestamp: new Date(msg.timestamp).getTime(),
-        isUser: msg.author.username === userName // Add this line
-    }));
+        isDiscord: true // All messages from this endpoint are from Discord
+      }));
 
     return {
       statusCode: 200,
       body: JSON.stringify(messages),
     };
-  } catch (error) {
-    console.error('Error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message
-    });
-
+    } catch (error) {
+    console.error('Detailed error:', error.response ? error.response.data : error.message);
     return {
       statusCode: error.response?.status || 500,
       body: JSON.stringify({ 

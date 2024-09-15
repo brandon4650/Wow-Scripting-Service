@@ -133,31 +133,31 @@ document.addEventListener('DOMContentLoaded', () => {
         let lastMessageTimestamp = 0;
 
         async function fetchMessages() {
-          try {
-            console.log('Fetching messages for threadId:', threadId);
-            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ threadId: threadId, after: lastMessageTimestamp }),
-            });
-        
-            if (!response.ok) {
-              const errorData = await response.json();
-              console.error('Error response from fetchDiscordMessages:', errorData);
-              throw new Error(errorData.error || 'Failed to fetch messages');
-            }
-        
-            const messages = await response.json();
-            if (messages.length > 0) {
-              console.log('Fetched new messages:', messages);
-              messages.forEach(msg => {
-                addMessageToChat(msg.sender, msg.content, msg.isUser);
-                lastMessageTimestamp = Math.max(lastMessageTimestamp, msg.timestamp);
+            try {
+              console.log('Fetching messages for threadId:', threadId);
+              const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ threadId: threadId, after: lastMessageTimestamp }),
               });
-            }
-          } catch (error) {
-            console.error('Error in fetchMessages:', error);
-          }
+         
+             if (!response.ok) {
+               const errorData = await response.json();
+               console.error('Error response from fetchDiscordMessages:', errorData);
+               throw new Error(errorData.error || 'Failed to fetch messages');
+             }
+         
+             const messages = await response.json();
+             if (messages.length > 0) {
+               console.log('Fetched new messages:', messages);
+               messages.forEach(msg => {
+                 addMessageToChat(msg.sender, msg.content, !msg.isDiscord);
+                 lastMessageTimestamp = Math.max(lastMessageTimestamp, msg.timestamp);
+               });
+             }
+           } catch (error) {
+             console.error('Error in fetchMessages:', error);
+           }
         }
         fetchMessages();
         // Fetch messages every 5 seconds
