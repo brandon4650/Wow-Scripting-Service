@@ -2,10 +2,10 @@ const axios = require('axios');
 
 exports.handler = async (event, context) => {
   const { threadId } = JSON.parse(event.body);
-  const discordBotToken = process.env.DISCORD_BOT_TOKEN;
+  const discordBotToken = process.env.DISCORD_TOKEN;
 
   if (!discordBotToken) {
-    console.error('DISCORD_BOT_TOKEN is not set');
+    console.error('DISCORD_TOKEN is not set');
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Server configuration error: Missing bot token' }),
