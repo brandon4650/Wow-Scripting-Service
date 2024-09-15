@@ -6,12 +6,13 @@
   "type": "module",
   "scripts": {
     "start": "netlify dev",
-    "build": "# Add build script if needed"
+    "build": "echo 'No build step needed'"
   },
   "dependencies": {
-    "node-fetch": "^2.6.1"
+    "axios": "^1.7.7",
+    "node-fetch": "^2.6.12"
   },
   "devDependencies": {
-    "netlify-cli": "^8.0.0"
+    "netlify-cli": "^15.9.1"
   }
 }
