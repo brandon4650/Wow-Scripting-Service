@@ -15,8 +15,3 @@ functions
 dev
 ]
   functionsPort = 8888
-
-[[
-plugins
-]]
-  package = "@netlify/plugin-functions-install-core"
