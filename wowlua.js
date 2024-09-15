@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatWindow = document.getElementById('chatWindow');
     const chatInput = document.getElementById('chatInput');
     const sendChatBtn = document.getElementById('sendChatBtn');
-    const scriptTypeSelect = document.getElementById('scriptType');
-    const otherScriptTypeInput = document.getElementById('otherScriptType');
+    const scriptTypeSelect = document.querySelector('select[name="scriptType"]');
+    const otherScriptTypeInput = document.querySelector('input[name="otherScriptType"]');
 
     newCustomerBtn.addEventListener('click', () => {
         newCustomerModal.style.display = 'block';

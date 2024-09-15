@@ -24,23 +24,23 @@
                 <span class="close">&times;</span>
                 <h2>New Customer Information</h2>
                 <form id="newCustomerForm">
-                    <input type="text" id="referral" placeholder="Referral Discord Name or Email">
-                    <input type="text" id="discordName" placeholder="Your Discord Name" required>
-                    <input type="email" id="email" placeholder="PayPal Email (if applicable)" required>
-                    <select id="server" required>
+                    <input type="text" name="referral" placeholder="Referral Discord Name or Email">
+                    <input type="text" name="discordName" placeholder="Your Discord Name" required>
+                    <input type="email" name="email" placeholder="PayPal Email (if applicable)" required>
+                    <select name="server" required>
                         <option value="">Select Server</option>
                         <option value="trinitycore">TrinityCore</option>
                         <option value="azerothcore">AzerothCore</option>
                     </select>
-                    <select id="scriptType" required>
+                    <select name="scriptType" required>
                         <option value="">Select Script Type</option>
                         <option value="boss">Boss script</option>
                         <option value="player">Player script</option>
                         <option value="system">System script</option>
                         <option value="other">Other</option>
                     </select>
-                    <input type="text" id="otherScriptType" placeholder="Specify Other Script Type" style="display: none;">
-                    <textarea id="description" placeholder="Describe your script in detail" required></textarea>
+                    <input type="text" name="otherScriptType" placeholder="Specify Other Script Type" style="display: none;">
+                    <textarea name="description" placeholder="Describe your script in detail" required></textarea>
                     <button type="submit" class="btn">Start Chat</button>
                 </form>
             </div>
