@@ -25,13 +25,13 @@ exports.handler = async (event, context) => {
     });
 
     const messages = response.data
-      .filter(msg => msg.author.username !== 'Lua Script Services') // Filter out bot messages
+      .filter(msg => msg.author.username !== userName) // Only filter out messages from the chat window user
       .map(msg => ({
         sender: msg.author.username,
         content: msg.content,
         timestamp: new Date(msg.timestamp).getTime(),
-        isDiscord: true // All messages from this endpoint are from Discord
-      }));
+        isDiscord: true
+    }));
 
     return {
       statusCode: 200,

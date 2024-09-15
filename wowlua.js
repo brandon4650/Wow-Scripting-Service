@@ -175,9 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.classList.add('chat-message');
         
         if (isUser) {
-          messageElement.classList.add('user-message');
+            messageElement.classList.add('user-message');
         } else {
-          messageElement.classList.add('discord-message');
+            messageElement.classList.add('discord-message');
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
