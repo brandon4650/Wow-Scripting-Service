@@ -132,17 +132,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }    
     
-    async function sendMessage(message) {
+    async function sendMessage(message, file = null) {
         try {
+            const formData = new FormData();
+            formData.append('threadId', currentThreadId);
+            formData.append('userName', currentUserName);
+            formData.append('content', message);
+            formData.append('sendMessage', true);
+    
+            if (file) {
+                formData.append('file', file);
+            }
+    
             const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    threadId: currentThreadId,
-                    userName: currentUserName, // Use currentUserName here
-                    content: message,
-                    sendMessage: true
-                })
+                body: formData
             });
     
             if (!response.ok) {
@@ -160,8 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     sendChatBtn.onclick = () => {
         const message = chatInput.value.trim();
-        if (message) {
-            sendMessage(message);
+        const file = document.getElementById('fileInput').files[0];
+        if (message || file) {
+            sendMessage(message, file);
         }
     };
     

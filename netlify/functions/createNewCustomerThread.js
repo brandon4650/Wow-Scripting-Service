@@ -1,4 +1,5 @@
 const axios = require('axios');
+const FormData = require('form-data');
 
 exports.handler = async (event) => {
   const { DISCORD_TOKEN, NEW_CUSTOMER_CHANNEL, WEBHOOK_URL } = process.env;
@@ -16,13 +17,24 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { referral, discordName, email, server, scriptType, description } = JSON.parse(event.body);
-    
+    const formData = new FormData();
+    const payload = JSON.parse(event.body);
+
+    // Append form fields to the FormData object
+    Object.entries(payload).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    // Check if a file was uploaded
+    if (payload.fileUpload) {
+      formData.append('fileUpload', payload.fileUpload);
+    }
+
     console.log('Attempting to create Discord thread...');
     const threadResponse = await axios.post(
       `https://discord.com/api/v10/channels/${NEW_CUSTOMER_CHANNEL}/threads`,
       {
-        name: `New Customer - ${discordName}`,
+        name: `New Customer - ${payload.discordName}`,
         type: 11,  // Private thread
         auto_archive_duration: 1440  // Auto archive after 24 hours
       },
@@ -40,17 +52,9 @@ exports.handler = async (event) => {
     console.log('Posting initial message to thread...');
     const messageResponse = await axios.post(
       `${WEBHOOK_URL}?thread_id=${threadData.id}`,
+      formData,
       {
-        content: `New Customer Request:
-        Discord Name: ${discordName}
-        Email: ${email}
-        Server: ${server}
-        Script Type: ${scriptType}
-        Referral: ${referral || 'N/A'}
-        Description: ${description}`
-      },
-      {
-        headers: { 'Content-Type': 'application/json' }
+        headers: formData.getHeaders()
       }
     );
 
