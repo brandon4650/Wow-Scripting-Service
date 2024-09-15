@@ -113,10 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 console.log('Message sent successfully:', result);
                 
-                // Clear input field and add message to chat
+                addMessageToChat(userName, message, true);
                 chatInput.value = '';
-                addMessageToChat(userName, message);
-            } catch (error) {
+            }   catch (error) {
                 console.error('Error sending message:', error);
                 addMessageToChat('System', 'Failed to send message. Please try again later.');
             }
@@ -152,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (messages.length > 0) {
               console.log('Fetched new messages:', messages);
               messages.forEach(msg => {
-                addMessageToChat(msg.sender, msg.content);
+                addMessageToChat(msg.sender, msg.content, msg.isUser);
                 lastMessageTimestamp = Math.max(lastMessageTimestamp, msg.timestamp);
               });
             }
@@ -170,15 +169,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     
-    function addMessageToChat(sender, message) {
+    function addMessageToChat(sender, message, isUser = false) {
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
         
-        if (sender === 'Support') {
-            messageElement.classList.add('support-message');
+        if (isUser) {
+          messageElement.classList.add('user-message');
         } else {
-            messageElement.classList.add('user-message');
+          messageElement.classList.add('discord-message');
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;

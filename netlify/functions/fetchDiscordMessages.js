@@ -24,10 +24,13 @@ exports.handler = async (event, context) => {
       },
     });
 
-    const messages = response.data.map(msg => ({
-      sender: msg.author.username,
-      content: msg.content,
-      timestamp: new Date(msg.timestamp).getTime()
+    const messages = response.data
+      .filter(msg => msg.author.username !== 'Lua Script Services')
+      .map(msg => ({
+        sender: msg.author.username,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp).getTime(),
+        isUser: msg.author.username === userName // Add this line
     }));
 
     return {

@@ -169,11 +169,21 @@ input, select, textarea {
     padding: 8px 12px;
     border-radius: 12px;
     max-width: 80%;
+    margin-bottom: 10px;
 }
 
 .user-message {
     align-self: flex-end; 
-    background-color: #2eb82e; /* Updated to green */
+    background-color: #2eb82e; /* Keeping your green color */
+    color: var(--text-color);
+    margin-left: auto;
+}
+
+.discord-message {
+    align-self: flex-start;
+    background-color: #00a8ff; /* Using your primary color for Discord messages */
+    color: var(--text-color);
+    margin-right: auto;
 }
 
 .support-message {
