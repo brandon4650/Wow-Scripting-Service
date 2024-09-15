@@ -1,36 +1,19 @@
 const axios = require('axios');
-const { WebSocketProvider } = require('@netlify/websocket-support');
+const WebSocket = require('ws');
+
+let wss;
 
 exports.handler = async (event, context) => {
-    const provider = new WebSocketProvider(event, context);
-
-    if (provider.isWebSocket) {
-        provider.on('connection', (socket) => {
-            console.log('Client connected');
-
-            socket.on('joinThread', async ({ threadId, userName }) => {
-                console.log(`User ${userName} joined thread ${threadId}`);
-                await fetchAndSendMessages(socket, threadId, userName);
-            });
-
-            socket.on('message', async ({ threadId, userName, content }) => {
-                try {
-                    console.log('Received message:', { threadId, userName, content });
-                    await sendMessageToDiscord(threadId, userName, content);
-                    console.log('Message sent to Discord');
-                    await fetchAndSendMessages(socket, threadId, userName);
-                } catch (error) {
-                    console.error('Error handling message:', error);
-                    socket.emit('error', { message: 'Failed to send message' });
-                }
-            });
-
-            socket.on('disconnect', () => {
-                console.log('Client disconnected');
-            });
-        });
-
-        return provider.handle();
+    if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/fetchDiscordMessages') {
+        // WebSocket upgrade
+        const { awsContext } = context.clientContext || {};
+        if (awsContext && awsContext.websocket) {
+            if (!wss) {
+                wss = new WebSocket.Server({ noServer: true });
+                setupWebSocketServer(wss);
+            }
+            return awsContext.websocket.upgrade();
+        }
     }
 
     // Handle HTTP requests
@@ -71,13 +54,49 @@ exports.handler = async (event, context) => {
     }
 };
 
-async function fetchAndSendMessages(socket, threadId, userName) {
+function setupWebSocketServer(wss) {
+    wss.on('connection', (ws) => {
+        console.log('Client connected');
+
+        ws.on('message', async (message) => {
+            const data = JSON.parse(message);
+            if (data.type === 'joinThread') {
+                await handleJoinThread(ws, data.threadId, data.userName);
+            } else if (data.type === 'message') {
+                await handleMessage(ws, data.threadId, data.userName, data.content);
+            }
+        });
+
+        ws.on('close', () => {
+            console.log('Client disconnected');
+        });
+    });
+}
+
+async function handleJoinThread(ws, threadId, userName) {
+    console.log(`User ${userName} joined thread ${threadId}`);
+    await fetchAndSendMessages(ws, threadId, userName);
+}
+
+async function handleMessage(ws, threadId, userName, content) {
+    try {
+        console.log('Received message:', { threadId, userName, content });
+        await sendMessageToDiscord(threadId, userName, content);
+        console.log('Message sent to Discord');
+        await fetchAndSendMessages(ws, threadId, userName);
+    } catch (error) {
+        console.error('Error handling message:', error);
+        ws.send(JSON.stringify({ type: 'error', message: 'Failed to send message' }));
+    }
+}
+
+async function fetchAndSendMessages(ws, threadId, userName) {
     try {
         const messages = await fetchMessagesFromDiscord(threadId, userName);
-        socket.emit('message', messages);
+        ws.send(JSON.stringify({ type: 'message', messages }));
     } catch (error) {
         console.error('Error fetching and sending messages:', error);
-        socket.emit('error', { message: 'Failed to fetch messages' });
+        ws.send(JSON.stringify({ type: 'error', message: 'Failed to fetch messages' }));
     }
 }
 

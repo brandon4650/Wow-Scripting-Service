@@ -13,8 +13,7 @@
     "node-fetch": "^2.6.12",
     "discord.js": "^13.6.0",
     "socket.io": "^4.6.1",
-    "socket.io-client": "^4.6.1",
-    "@netlify/websocket-support": "^0.3.6"
+    "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
     "netlify-cli": "^15.9.1"
