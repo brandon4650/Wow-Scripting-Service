@@ -17,4 +17,7 @@
   X-From = "Netlify"
 
 [dev]
-  functionsPort = 8000
+  functionsPort = 8888
+
+[[plugins]]
+  package = "@netlify/plugin-functions-core"

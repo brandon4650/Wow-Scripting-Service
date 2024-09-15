@@ -4,17 +4,21 @@ const WebSocket = require('ws');
 let wss;
 
 exports.handler = async (event, context) => {
-    if (event.httpMethod === 'GET' && event.headers.upgrade?.toLowerCase() === 'websocket') {
-        // WebSocket upgrade
+    console.log('Received event:', event.httpMethod, event.path);
+
+    if (event.httpMethod === 'GET' && event.headers.upgrade && event.headers.upgrade.toLowerCase() === 'websocket') {
+        console.log('WebSocket upgrade request received');
         const { awsContext } = context.clientContext || {};
         if (awsContext) {
             if (!wss) {
+                console.log('Creating new WebSocket server');
                 wss = new WebSocket.Server({ noServer: true });
                 setupWebSocketServer(wss);
             }
             const ws = await new Promise((resolve) => {
                 wss.handleUpgrade(event, event.headers['sec-websocket-key'], event.headers['sec-websocket-protocol'], resolve);
             });
+            console.log('WebSocket connection established');
             return { statusCode: 101 };
         }
     }
@@ -63,19 +67,25 @@ exports.handler = async (event, context) => {
 
 function setupWebSocketServer(wss) {
     wss.on('connection', (ws) => {
-        console.log('Client connected');
+        console.log('Client connected to WebSocket');
 
         ws.on('message', async (message) => {
-            const data = JSON.parse(message);
-            if (data.type === 'joinThread') {
-                await handleJoinThread(ws, data.threadId, data.userName);
-            } else if (data.type === 'message') {
-                await handleMessage(ws, data.threadId, data.userName, data.content);
+            console.log('Received message:', message);
+            try {
+                const data = JSON.parse(message);
+                if (data.type === 'joinThread') {
+                    await handleJoinThread(ws, data.threadId, data.userName);
+                } else if (data.type === 'message') {
+                    await handleMessage(ws, data.threadId, data.userName, data.content);
+                }
+            } catch (error) {
+                console.error('Error processing message:', error);
+                ws.send(JSON.stringify({ type: 'error', message: 'Failed to process message' }));
             }
         });
 
         ws.on('close', () => {
-            console.log('Client disconnected');
+            console.log('Client disconnected from WebSocket');
         });
     });
 }
