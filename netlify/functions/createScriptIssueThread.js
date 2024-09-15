@@ -4,13 +4,28 @@ exports.handler = async (event) => {
   const { DISCORD_TOKEN, ISSUE_CHANNEL, WEBHOOK_ISSUE } = process.env;
   
   if (!DISCORD_TOKEN || !ISSUE_CHANNEL || !WEBHOOK_ISSUE) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Server configuration error' }) };
+    console.error('Missing environment variables');
+    return { 
+      statusCode: 500, 
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ error: 'Server configuration error' }) 
+    };
   }
 
   try {
     const { scriptName, discordName, email, server, scriptType, issueDescription } = JSON.parse(event.body);
     
-    // Create a thread in Discord
+    // Log received data
+    console.log('Received issue data:', { scriptName, discordName, email, server, scriptType, issueDescription });
+
+    if (!scriptName || !discordName || !email || !server || !scriptType || !issueDescription) {
+      throw new Error('Missing required fields');
+    }
+
+    console.log('Attempting to create Discord thread for script issue...');
     const threadResponse = await axios.post(
       `https://discord.com/api/v10/channels/${ISSUE_CHANNEL}/threads`,
       {
@@ -26,10 +41,15 @@ exports.handler = async (event) => {
       }
     );
 
-    const threadData = threadResponse.data;
+    if (!threadResponse.data || !threadResponse.data.id) {
+      throw new Error('Failed to create Discord thread');
+    }
 
-    // Post initial message in the thread
-    await axios.post(
+    const threadData = threadResponse.data;
+    console.log('Thread created successfully:', threadData.id);
+
+    console.log('Posting initial message to thread...');
+    const messageResponse = await axios.post(
       `${WEBHOOK_ISSUE}?thread_id=${threadData.id}`,
       {
         content: `Script Issue Report:
@@ -45,15 +65,30 @@ exports.handler = async (event) => {
       }
     );
 
+    if (!messageResponse.data) {
+      console.error('Failed to post initial message');
+    }
+
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
       body: JSON.stringify({ 
         threadId: threadData.id,
-        chatTitle: 'Script Issue'
+        chatTitle: `Script Issue - ${scriptName}`
       })
     };
   } catch (error) {
-    console.error('Error:', error);
-    return { statusCode: 500, body: JSON.stringify({ error: 'Failed to process request' }) };
+    console.error('Error in createScriptIssueThread:', error);
+    return { 
+      statusCode: 500, 
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ error: error.message || 'Failed to process request' }) 
+    };
   }
 };

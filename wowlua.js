@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(issueForm);
         const issueData = Object.fromEntries(formData.entries());
         
+        // Log the form data
+        console.log('Submitting issue data:', issueData);
+    
         try {
           const response = await fetch('/.netlify/functions/createScriptIssueThread', {
             method: 'POST',
@@ -136,16 +139,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     threadId: currentThreadId,
-                    userName: currentUserName,
+                    userName: currentUserName, // Use currentUserName here
                     content: message,
                     sendMessage: true
                 })
             });
-
+    
             if (!response.ok) {
                 throw new Error('Failed to send message');
             }
-
+    
             addMessageToChat(currentUserName, message, true);
             chatInput.value = '';
             fetchMessages(); // Fetch messages immediately after sending
