@@ -34,11 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(customerData)
             });
-
+    
             if (!response.ok) {
                 throw new Error('Failed to create chat');
             }
-
+    
             const result = await response.json();
             newCustomerModal.style.display = 'none';
             initializeChat(result.threadId, result.chatTitle, customerData.discordName);
@@ -75,10 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function initializeChat(threadId, chatTitle, userName) {
-        chatWindow.style.display = 'block';
+        chatWindow.style.display = 'block'; // This line makes the chat window visible
         const chatTitleElement = document.getElementById('chatTitle');
         chatTitleElement.textContent = chatTitle;
-
+    
         // Clear previous messages
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';

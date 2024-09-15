@@ -152,7 +152,6 @@ input, select, textarea {
     border: 1px solid var(--secondary-color);
     border-radius: 10px;
     overflow: hidden;
-    display: flex;
     flex-direction: column;
 }
 
@@ -168,7 +167,7 @@ input, select, textarea {
     background-color: #1a1a3a;
 }
 
-#chatInput {
+/* #chatInput {
     flex-grow: 1;
     margin-right: 10px;
     padding: 5px;
@@ -176,16 +175,16 @@ input, select, textarea {
     border-radius: 4px;
     background-color: #3a3a5a;
     color: var(--text-color);
-}
+} */
 
-#sendChatBtn {
+/* #sendChatBtn {
     padding: 5px 10px;
     background-color: var(--primary-color);
     color: var(--text-color);
     border: none;
     border-radius: 4px;
     cursor: pointer;
-}
+} */
 
 #chatTitle {
     padding: 10px;
