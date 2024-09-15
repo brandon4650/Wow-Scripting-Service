@@ -1,5 +1,4 @@
 const axios = require('axios');
-const FormData = require('form-data');
 
 exports.handler = async (event) => {
   const { DISCORD_TOKEN, ISSUE_CHANNEL, WEBHOOK_ISSUE } = process.env;
@@ -17,21 +16,10 @@ exports.handler = async (event) => {
   }
 
   try {
-    const formData = new FormData();
-    const payload = JSON.parse(event.body);
-
-    // Append form fields to the FormData object
-    Object.entries(payload).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    // Check if a file was uploaded
-    if (payload.fileUpload) {
-      formData.append('fileUpload', payload.fileUpload);
-    }
-
+    const { scriptName, discordName, email, server, scriptType, issueDescription } = JSON.parse(event.body);
+    
     // Validate required fields
-    if (!payload.scriptName || !payload.discordName || !payload.email || !payload.server || !payload.scriptType || !payload.issueDescription) {
+    if (!scriptName || !discordName || !email || !server || !scriptType || !issueDescription) {
       console.error('Missing required fields');
       return {
         statusCode: 400,
@@ -47,7 +35,7 @@ exports.handler = async (event) => {
     const threadResponse = await axios.post(
       `https://discord.com/api/v10/channels/${ISSUE_CHANNEL}/threads`,
       {
-        name: `Script Issue - ${payload.scriptName}`,
+        name: `Script Issue - ${scriptName}`,
         type: 11,  // Private thread
         auto_archive_duration: 1440  // Auto archive after 24 hours
       },
@@ -65,9 +53,17 @@ exports.handler = async (event) => {
     console.log('Posting initial message to thread...');
     const messageResponse = await axios.post(
       `${WEBHOOK_ISSUE}?thread_id=${threadData.id}`,
-      formData,
       {
-        headers: formData.getHeaders()
+        content: `Script Issue Report:
+        Script Name: ${scriptName}
+        Discord Name: ${discordName}
+        Email: ${email}
+        Server: ${server}
+        Script Type: ${scriptType}
+        Issue Description: ${issueDescription}`
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }
       }
     );
 
@@ -83,7 +79,7 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({ 
         threadId: threadData.id,
-        chatTitle: `Script Issue - ${payload.scriptName}`
+        chatTitle: `Script Issue - ${scriptName}`
       })
     };
   } catch (error) {
