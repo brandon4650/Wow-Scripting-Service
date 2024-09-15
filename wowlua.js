@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function initializeChat(threadId, chatTitle, userName) {
-        chatWindow.style.display = 'block'; // This line makes the chat window visible
+        chatWindow.style.display = 'flex'; // This line makes the chat window visible
         const chatTitleElement = document.getElementById('chatTitle');
         chatTitleElement.textContent = chatTitle;
     
