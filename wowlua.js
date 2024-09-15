@@ -61,23 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Submitting issue data:', issueData);
     
         try {
-          const response = await fetch('/.netlify/functions/createScriptIssueThread', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(issueData)
-          });
-        
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create chat');
-          }
-        
-          const result = await response.json();
-          luaScriptIssueModal.style.display = 'none';
-          initializeChat(result.threadId, result.chatTitle, issueData.discordName);
+            const response = await fetch('/.netlify/functions/createScriptIssueThread', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(issueData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create chat');
+            }
+            
+            const result = await response.json();
+            luaScriptIssueModal.style.display = 'none';
+            initializeChat(result.threadId, result.chatTitle, issueData.discordName);
         } catch (error) {
-          console.error('Error:', error);
-          alert(`There was an error starting the chat: ${error.message}. Please try again.`);
+            console.error('Error:', error);
+            alert(`There was an error starting the chat: ${error.message}. Please try again.`);
         }
     });
 
