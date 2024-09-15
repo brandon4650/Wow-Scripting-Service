@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const customerData = Object.fromEntries(formData.entries());
         
         try {
-            const response = await fetch('/api/createNewCustomerThread', {
+            const response = await fetch('/.netlify/functions/createNewCustomerThread', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(customerData)
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initializeChat(result.threadId, result.chatTitle, customerData.discordName);
         } catch (error) {
             console.error('Error:', error);
-            alert('There was an error starting the chat. Please try again.');
+            alert(`There was an error: ${error.message}. Please try again.`);
         }
     });
 
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const issueData = Object.fromEntries(formData.entries());
         
         try {
-            const response = await fetch('/api/createScriptIssueThread', {
+            const response = await fetch('/.netlify/functions/createScriptIssueThread', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(issueData)
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initializeChat(result.threadId, result.chatTitle, issueData.discordName);
         } catch (error) {
             console.error('Error:', error);
-            alert('There was an error submitting your ticket. Please try again.');
+            alert(`There was an error: ${error.message}. Please try again.`);
         }
     });
 
