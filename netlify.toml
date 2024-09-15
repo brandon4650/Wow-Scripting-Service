@@ -1,17 +1,11 @@
-[
-build
-]
-  command = "npm install && npm run build"
-  functions = "netlify/functions"
-  publish = "."
+[build]
+command = "npm install && npm run build"
+functions = "netlify/functions"
+publish = "."
 
-[
-functions
-]
-  node_bundler = "esbuild"
-  external_node_modules = ["discord.js", "ws"]
+[functions]
+node_bundler = "esbuild"
+external_node_modules = ["discord.js", "ws"]
 
-[
-dev
-]
-  functionsPort = 8888
+[dev]
+functionsPort = 8888
