@@ -89,15 +89,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
 
-        // Here you would set up the WebSocket connection using the threadId
-        // For now, we'll use a simple simulation
-        
+        const socket = new WebSocket(`wss://your-server-url/websocket?threadId=${threadId}`);
+
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+        };
+    
+        socket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            addMessageToChat(message.sender, message.content);
+        };
+    
         sendChatBtn.onclick = () => {
             const message = chatInput.value.trim();
             if (message) {
-                addMessageToChat(userName, message);
+                socket.send(JSON.stringify({ sender: userName, content: message }));
                 chatInput.value = '';
-                // Here you would send the message to the Discord thread
             }
         };
 
