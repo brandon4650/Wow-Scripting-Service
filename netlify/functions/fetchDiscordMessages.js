@@ -7,8 +7,9 @@ exports.handler = async (event) => {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    const { threadId, userName, lastMessageId } = JSON.parse(event.body);
+    const { threadId, userName, lastMessageId, sendMessage, content } = JSON.parse(event.body);
     const discordBotToken = process.env.DISCORD_TOKEN;
+    const repUserId = '643915314329026561'; // Your Discord user ID
 
     if (!discordBotToken) {
         console.error('DISCORD_TOKEN is not set');
@@ -18,21 +19,12 @@ exports.handler = async (event) => {
         };
     }
 
-    if (!userName) {
-        console.error('userName is not provided');
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Bad request: userName is required' }),
-        };
-    }
-
     try {
-        if (event.body.includes('sendMessage')) {
-            const { content } = JSON.parse(event.body);
+        if (sendMessage) {
             await sendMessageToDiscord(threadId, userName, content);
         }
         
-        const messages = await fetchMessagesFromDiscord(threadId, userName, lastMessageId);
+        const messages = await fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUserId);
         return {
             statusCode: 200,
             body: JSON.stringify(messages),
@@ -49,7 +41,7 @@ exports.handler = async (event) => {
     }
 };
 
-async function fetchMessagesFromDiscord(threadId, userName, lastMessageId) {
+async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUserId) {
     const discordBotToken = process.env.DISCORD_TOKEN;
     const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
     
@@ -68,13 +60,14 @@ async function fetchMessagesFromDiscord(threadId, userName, lastMessageId) {
         });
 
         return response.data
-            .filter(msg => msg.author.username !== 'Lua Script Services' && msg.content.trim() !== '')
+            .filter(msg => msg.content.trim() !== '')
             .map(msg => ({
                 id: msg.id,
-                sender: msg.author.username,
+                sender: msg.author.id === repUserId ? 'Support' : msg.author.username,
                 content: msg.content,
                 isDiscord: true,
-                isDiscordUser: msg.author.username !== userName
+                isDiscordUser: msg.author.id !== repUserId && msg.author.username !== 'Lua Services',
+                isLuaServices: msg.author.username === 'Lua Services'
             }));
     } catch (error) {
         console.error('Error fetching messages from Discord:', error);

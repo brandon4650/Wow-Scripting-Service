@@ -103,25 +103,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchMessages() {
-    try {
-        const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                threadId: currentThreadId, 
-                userName: currentUserName, 
-                lastMessageId 
-            })
-        });
-
+        try {
+            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ threadId: currentThreadId, userName: currentUserName, lastMessageId })
+            });
+    
             if (!response.ok) {
                 throw new Error('Failed to fetch messages');
             }
-
+    
             const messages = await response.json();
             messages.forEach(message => {
-                addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
-                lastMessageId = message.id;
+                if (!message.isLuaServices) {
+                    addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
+                    lastMessageId = message.id;
+                }
             });
         } catch (error) {
             console.error('Error fetching messages:', error);
@@ -169,15 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isUser) {
             messageElement.classList.add('user-message');
-            sender = currentUserName;  // Use the current user's name
+            sender = currentUserName;
+        } else if (sender === 'Support') {
+            messageElement.classList.add('support-message');
         } else if (isDiscordUser) {
             messageElement.classList.add('discord-user-message');
-            // Only prepend "DiscordUser" if it's not the Lua Services bot
-            sender = sender === "Lua Services" ? sender : `DiscordUser (${sender})`;
+            sender = `DiscordUser (${sender})`;
         } else if (isDiscord) {
             messageElement.classList.add('discord-message');
-        } else {
-            messageElement.classList.add('support-message');
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
