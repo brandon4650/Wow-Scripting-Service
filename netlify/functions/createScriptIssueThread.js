@@ -1,9 +1,9 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event) => {
-  const { DISCORD_TOKEN, ISSUE_CHANNEL, WEBHOOK_URL } = process.env;
+  const { DISCORD_TOKEN, ISSUE_CHANNEL, WEBHOOK_ISSUE } = process.env;
   
-  if (!DISCORD_TOKEN || !ISSUE_CHANNEL || !WEBHOOK_URL) {
+  if (!DISCORD_TOKEN || !ISSUE_CHANNEL || !WEBHOOK_ISSUE) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Server configuration error' }) };
   }
 
@@ -31,7 +31,7 @@ exports.handler = async (event) => {
     const threadData = await threadResponse.json();
 
     // Post initial message in the thread
-    await fetch(`${WEBHOOK_URL}?thread_id=${threadData.id}`, {
+    await fetch(`${WEBHOOK_ISSUE}?thread_id=${threadData.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
