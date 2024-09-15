@@ -173,8 +173,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    const addedMessages = new Set();
+
     function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false) {
         console.log('Adding message:', { sender, message, isUser, isDiscord, isDiscordUser });
+        
+        const messageKey = `${sender}-${message}`;
+        if (addedMessages.has(messageKey)) {
+            console.log('Duplicate message detected, skipping:', messageKey);
+            return;
+        }
+        addedMessages.add(messageKey);
+    
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
@@ -193,13 +203,26 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+        // Limit the size of addedMessages to prevent memory issues
+        if (addedMessages.size > 1000) {
+            const oldestMessage = addedMessages.values().next().value;
+            addedMessages.delete(oldestMessage);
+        }
     }
-
+    
     document.querySelectorAll('.close').forEach(closeBtn => {
         closeBtn.onclick = function() {
             this.closest('.modal, .chat-window').style.display = 'none';
         }
     });
+    
+    // Function to clear message history (call this when starting a new chat)
+    function clearMessageHistory() {
+        addedMessages.clear();
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+    }
 
     window.onclick = (event) => {
         if (event.target.classList.contains('modal')) {
