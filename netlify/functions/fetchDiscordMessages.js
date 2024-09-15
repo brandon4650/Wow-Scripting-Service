@@ -25,19 +25,19 @@ exports.handler = async (event, context) => {
     });
 
     const messages = response.data
-      .filter(msg => msg.author.username !== userName) // Only filter out messages from the chat window user
+      .filter(msg => msg.author.username !== 'Lua Script Services') // Filter out only Lua Script Services messages
       .map(msg => ({
         sender: msg.author.username,
         content: msg.content,
         timestamp: new Date(msg.timestamp).getTime(),
         isDiscord: true
-    }));
+      }));
 
     return {
       statusCode: 200,
       body: JSON.stringify(messages),
     };
-    } catch (error) {
+  } catch (error) {
     console.error('Detailed error:', error.response ? error.response.data : error.message);
     return {
       statusCode: error.response?.status || 500,

@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Thread ID:', threadId);
         console.log('Chat Title:', chatTitle);
         console.log('User Name:', userName);
+
+        window.currentUserName = userName;
     
         chatWindow.style.display = 'flex'; // Show the chat window
         const chatTitleElement = document.getElementById('chatTitle');
@@ -138,7 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
               const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ threadId: threadId, after: lastMessageTimestamp }),
+                body: JSON.stringify({ 
+                  threadId: threadId, 
+                  after: lastMessageTimestamp, 
+                  userName: window.currentUserName 
+                }),
               });
          
              if (!response.ok) {
