@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const otherScriptTypeInput = document.querySelector('input[name="otherScriptType"]');
 
     let currentThreadId, currentChatTitle, currentUserName;
-    let socket;
+    let lastMessageId = null;
+    let pollingInterval;
 
     newCustomerBtn.addEventListener('click', () => {
         newCustomerModal.style.display = 'block';
@@ -89,71 +90,61 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
     
-        connectWebSocket(threadId, userName);
+        startPolling();
 
         setTimeout(() => {
             addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
         }, 1000);
     }
 
-    function connectWebSocket(threadId, userName) {
-        const wsUrl = `wss://${window.location.hostname}/.netlify/functions/fetchDiscordMessages`;
-        console.log('Attempting to connect to WebSocket:', wsUrl);
-        
-        socket = new WebSocket(wsUrl);
-        
-        socket.onopen = () => {
-            console.log('WebSocket connection opened');
-            socket.send(JSON.stringify({ type: 'joinThread', threadId, userName }));
-        };
+    function startPolling() {
+        fetchMessages();
+        pollingInterval = setInterval(fetchMessages, 5000); // Poll every 5 seconds
+    }
 
-        socket.onmessage = (event) => {
-            console.log('Received WebSocket message:', event.data);
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'message') {
-                    data.messages.forEach(message => {
-                        addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
-                    });
-                } else if (data.type === 'error') {
-                    console.error('Socket error:', data.message);
-                    addMessageToChat('System', `An error occurred: ${data.message}`);
-                }
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
+    async function fetchMessages() {
+        try {
+            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ threadId: currentThreadId, userName: currentUserName, lastMessageId })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch messages');
             }
-        };
 
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            addMessageToChat('System', 'Connection error. Attempting to reconnect...');
-        };
-
-        socket.onclose = (event) => {
-            console.log('WebSocket closed:', event);
-            if (!event.wasClean) {
-                addMessageToChat('System', `Connection lost (${event.code}). Attempting to reconnect...`);
-                setTimeout(() => connectWebSocket(threadId, userName), 5000);
-            }
-        };
+            const messages = await response.json();
+            messages.forEach(message => {
+                addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
+                lastMessageId = message.id;
+            });
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+            addMessageToChat('System', 'Failed to fetch messages. Please try again later.');
+        }
     }
     
     async function sendMessage(message) {
         try {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    type: 'message',
+            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     threadId: currentThreadId,
                     userName: currentUserName,
-                    content: message
-                }));
+                    content: message,
+                    sendMessage: true
+                })
+            });
 
-                addMessageToChat(currentUserName, message, true);
-                chatInput.value = '';
-            } else {
-                console.error('WebSocket is not open. ReadyState:', socket ? socket.readyState : 'socket is null');
-                addMessageToChat('System', 'Connection is not ready. Please try again in a moment.');
+            if (!response.ok) {
+                throw new Error('Failed to send message');
             }
+
+            addMessageToChat(currentUserName, message, true);
+            chatInput.value = '';
+            fetchMessages(); // Fetch messages immediately after sending
         } catch (error) {
             console.error('Error sending message:', error);
             addMessageToChat('System', 'Failed to send message. Please try again later.');

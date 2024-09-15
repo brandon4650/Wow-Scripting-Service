@@ -1,33 +1,13 @@
 const axios = require('axios');
-const WebSocket = require('ws');
 
-let wss;
-
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
     console.log('Received event:', event.httpMethod, event.path);
 
-    if (event.httpMethod === 'GET' && event.headers.upgrade && event.headers.upgrade.toLowerCase() === 'websocket') {
-        console.log('WebSocket upgrade request received');
-        if (!wss) {
-            console.log('Creating new WebSocket server');
-            wss = new WebSocket.Server({ noServer: true });
-            setupWebSocketServer(wss);
-        }
-        
-        const ws = await new Promise((resolve) => {
-            wss.handleUpgrade(event, event.headers['sec-websocket-key'], event.headers['sec-websocket-protocol'], resolve);
-        });
-        
-        console.log('WebSocket connection established');
-        return { statusCode: 101 };
-    }
-
-    // Handle HTTP requests
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    const { threadId, userName } = JSON.parse(event.body);
+    const { threadId, userName, lastMessageId } = JSON.parse(event.body);
     const discordBotToken = process.env.DISCORD_TOKEN;
 
     if (!discordBotToken) {
@@ -47,7 +27,12 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        const messages = await fetchMessagesFromDiscord(threadId, userName);
+        if (event.body.includes('sendMessage')) {
+            const { content } = JSON.parse(event.body);
+            await sendMessageToDiscord(threadId, userName, content);
+        }
+        
+        const messages = await fetchMessagesFromDiscord(threadId, userName, lastMessageId);
         return {
             statusCode: 200,
             body: JSON.stringify(messages),
@@ -57,80 +42,29 @@ exports.handler = async (event, context) => {
         return {
             statusCode: error.response?.status || 500,
             body: JSON.stringify({ 
-                error: 'Failed to fetch messages', 
+                error: 'Failed to fetch or send messages', 
                 details: error.message || 'Unknown error'
             }),
         };
     }
 };
 
-function setupWebSocketServer(wss) {
-    wss.on('connection', (ws) => {
-        console.log('Client connected to WebSocket');
-
-        ws.on('message', async (message) => {
-            console.log('Received message:', message.toString());
-            try {
-                const data = JSON.parse(message);
-                if (data.type === 'joinThread') {
-                    await handleJoinThread(ws, data.threadId, data.userName);
-                } else if (data.type === 'message') {
-                    await handleMessage(ws, data.threadId, data.userName, data.content);
-                }
-            } catch (error) {
-                console.error('Error processing message:', error);
-                ws.send(JSON.stringify({ type: 'error', message: 'Failed to process message' }));
-            }
-        });
-
-        ws.on('close', () => {
-            console.log('Client disconnected from WebSocket');
-        });
-
-        ws.on('error', (error) => {
-            console.error('WebSocket error:', error);
-        });
-    });
-}
-
-async function handleJoinThread(ws, threadId, userName) {
-    console.log(`User ${userName} joined thread ${threadId}`);
-    await fetchAndSendMessages(ws, threadId, userName);
-}
-
-async function handleMessage(ws, threadId, userName, content) {
-    try {
-        console.log('Received message:', { threadId, userName, content });
-        await sendMessageToDiscord(threadId, userName, content);
-        console.log('Message sent to Discord');
-        await fetchAndSendMessages(ws, threadId, userName);
-    } catch (error) {
-        console.error('Error handling message:', error);
-        ws.send(JSON.stringify({ type: 'error', message: 'Failed to send message' }));
-    }
-}
-
-async function fetchAndSendMessages(ws, threadId, userName) {
-    try {
-        const messages = await fetchMessagesFromDiscord(threadId, userName);
-        ws.send(JSON.stringify({ type: 'message', messages }));
-    } catch (error) {
-        console.error('Error fetching and sending messages:', error);
-        ws.send(JSON.stringify({ type: 'error', message: 'Failed to fetch messages' }));
-    }
-}
-
-async function fetchMessagesFromDiscord(threadId, userName) {
+async function fetchMessagesFromDiscord(threadId, userName, lastMessageId) {
     const discordBotToken = process.env.DISCORD_TOKEN;
     const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
     
     try {
+        const params = { limit: 100 };
+        if (lastMessageId) {
+            params.after = lastMessageId;
+        }
+        
         const response = await axios.get(discordApiUrl, {
             headers: {
                 Authorization: `Bot ${discordBotToken}`,
                 'Content-Type': 'application/json'
             },
-            params: { limit: 100 }
+            params: params
         });
 
         return response.data
