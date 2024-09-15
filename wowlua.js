@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const otherScriptTypeInput = document.querySelector('input[name="otherScriptType"]');
 
     let currentThreadId, currentChatTitle, currentUserName;
-    let lastMessageTimestamp = 0;
     let socket;
 
     newCustomerBtn.addEventListener('click', () => {
@@ -32,9 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(newCustomerForm);
         const customerData = Object.fromEntries(formData.entries());
     
-        console.log('Form data:', customerData);
-        console.log('Discord Name:', customerData.discordName);
-        
         try {
             const response = await fetch('/.netlify/functions/createNewCustomerThread', {
                 method: 'POST',
@@ -61,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const issueData = Object.fromEntries(formData.entries());
         
         try {
-          const response = await fetch('/.netlify/functions/createNewCustomerThread', {
+          const response = await fetch('/.netlify/functions/createScriptIssueThread', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(issueData)
@@ -82,10 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function initializeChat(threadId, chatTitle, userName) {
-        console.log('Thread ID:', threadId);
-        console.log('Chat Title:', chatTitle);
-        console.log('User Name:', userName);
-
         currentThreadId = threadId;
         currentChatTitle = chatTitle;
         currentUserName = userName;
@@ -97,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
     
-        socket = io();
+        socket = io(window.location.origin);
         socket.on('connect', () => {
             console.log('Connected to server');
             socket.emit('joinThread', { threadId, userName });
@@ -105,52 +97,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.on('message', (message) => {
             addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
-            lastMessageTimestamp = message.timestamp || Date.now();
+        });
+
+        socket.on('error', (error) => {
+            console.error('Socket error:', error);
+            addMessageToChat('System', 'An error occurred. Please try again.');
         });
 
         setTimeout(() => {
             addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
         }, 1000);
-
-        fetchMessages(); // Fetch messages when initializing the chat
-    }
-
-    async function fetchMessages() {
-        try {
-            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    threadId: currentThreadId,
-                    after: lastMessageTimestamp,
-                    userName: currentUserName
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error response from fetchDiscordMessages:', errorData);
-                throw new Error(errorData.error || 'Failed to fetch messages');
-            }
-
-            const messages = await response.json();
-            messages.forEach((message) => {
-                addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
-                lastMessageTimestamp = Math.max(lastMessageTimestamp, message.timestamp);
-            });
-        } catch (error) {
-            console.error('Error in fetchMessages:', error);
-        }
     }
     
     async function sendMessage(message) {
         try {
-            console.log('Sending message:', message);
             socket.emit('message', {
                 threadId: currentThreadId,
                 userName: currentUserName,
-                content: message,
-                timestamp: Date.now() // Include timestamp when sending message
+                content: message
             });
 
             addMessageToChat(currentUserName, message, true);
@@ -168,18 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const addedMessages = new Set();
-
     function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false) {
-        console.log('Adding message:', { sender, message, isUser, isDiscord, isDiscordUser });
-        
-        const messageKey = `${sender}-${message}`;
-        if (addedMessages.has(messageKey)) {
-            console.log('Duplicate message detected, skipping:', messageKey);
-            return;
-        }
-        addedMessages.add(messageKey);
-    
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
@@ -198,12 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-        // Limit the size of addedMessages to prevent memory issues
-        if (addedMessages.size > 1000) {
-            const oldestMessage = addedMessages.values().next().value;
-            addedMessages.delete(oldestMessage);
-        }
     }
     
     document.querySelectorAll('.close').forEach(closeBtn => {
@@ -211,13 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.closest('.modal, .chat-window').style.display = 'none';
         }
     });
-    
-    // Function to clear message history (call this when starting a new chat)
-    function clearMessageHistory() {
-        addedMessages.clear();
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.innerHTML = '';
-    }
 
     window.onclick = (event) => {
         if (event.target.classList.contains('modal')) {

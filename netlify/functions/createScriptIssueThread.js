@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 exports.handler = async (event) => {
   const { DISCORD_TOKEN, ISSUE_CHANNEL, WEBHOOK_ISSUE } = process.env;
@@ -11,30 +11,27 @@ exports.handler = async (event) => {
     const { scriptName, discordName, email, server, scriptType, issueDescription } = JSON.parse(event.body);
     
     // Create a thread in Discord
-    const threadResponse = await fetch(`https://discord.com/api/v10/channels/${ISSUE_CHANNEL}/threads`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bot ${DISCORD_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const threadResponse = await axios.post(
+      `https://discord.com/api/v10/channels/${ISSUE_CHANNEL}/threads`,
+      {
         name: `Script Issue - ${scriptName}`,
         type: 11,  // Private thread
         auto_archive_duration: 1440  // Auto archive after 24 hours
-      })
-    });
+      },
+      {
+        headers: {
+          'Authorization': `Bot ${DISCORD_TOKEN}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
 
-    if (!threadResponse.ok) {
-      throw new Error('Failed to create Discord thread');
-    }
-
-    const threadData = await threadResponse.json();
+    const threadData = threadResponse.data;
 
     // Post initial message in the thread
-    await fetch(`${WEBHOOK_ISSUE}?thread_id=${threadData.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    await axios.post(
+      `${WEBHOOK_ISSUE}?thread_id=${threadData.id}`,
+      {
         content: `Script Issue Report:
         Script Name: ${scriptName}
         Discord Name: ${discordName}
@@ -42,8 +39,11 @@ exports.handler = async (event) => {
         Server: ${server}
         Script Type: ${scriptType}
         Issue Description: ${issueDescription}`
-      })
-    });
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
     return {
       statusCode: 200,

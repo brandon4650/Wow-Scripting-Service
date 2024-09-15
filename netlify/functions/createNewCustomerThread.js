@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 exports.handler = async (event) => {
   const { DISCORD_TOKEN, NEW_CUSTOMER_CHANNEL, WEBHOOK_URL } = process.env;
@@ -19,33 +19,28 @@ exports.handler = async (event) => {
     const { referral, discordName, email, server, scriptType, description } = JSON.parse(event.body);
     
     console.log('Attempting to create Discord thread...');
-    const threadResponse = await fetch(`https://discord.com/api/v10/channels/${NEW_CUSTOMER_CHANNEL}/threads`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bot ${DISCORD_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const threadResponse = await axios.post(
+      `https://discord.com/api/v10/channels/${NEW_CUSTOMER_CHANNEL}/threads`,
+      {
         name: `New Customer - ${discordName}`,
         type: 11,  // Private thread
         auto_archive_duration: 1440  // Auto archive after 24 hours
-      })
-    });
+      },
+      {
+        headers: {
+          'Authorization': `Bot ${DISCORD_TOKEN}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
 
-    if (!threadResponse.ok) {
-      const errorData = await threadResponse.text();
-      console.error('Discord API Error:', threadResponse.status, errorData);
-      throw new Error(`Discord API responded with status ${threadResponse.status}: ${errorData}`);
-    }
-
-    const threadData = await threadResponse.json();
+    const threadData = threadResponse.data;
     console.log('Thread created successfully:', threadData.id);
 
     console.log('Posting initial message to thread...');
-    const messageResponse = await fetch(`${WEBHOOK_URL}?thread_id=${threadData.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const messageResponse = await axios.post(
+      `${WEBHOOK_URL}?thread_id=${threadData.id}`,
+      {
         content: `New Customer Request:
         Discord Name: ${discordName}
         Email: ${email}
@@ -53,11 +48,14 @@ exports.handler = async (event) => {
         Script Type: ${scriptType}
         Referral: ${referral || 'N/A'}
         Description: ${description}`
-      })
-    });
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
-    if (!messageResponse.ok) {
-      console.error('Failed to post initial message:', await messageResponse.text());
+    if (!messageResponse.data) {
+      console.error('Failed to post initial message');
     }
 
     return {
