@@ -45,6 +45,7 @@ exports.handler = async (event) => {
       })
     });
 
+    // Return the success response with CORS headers
     return {
       statusCode: 200,
       headers: {
@@ -56,8 +57,10 @@ exports.handler = async (event) => {
         chatTitle: 'New Customer Chat'
       })
     };
+
   } catch (error) {
     console.error('Error:', error);
+    // Return the error response with CORS headers
     return { 
       statusCode: 500, 
       headers: {
