@@ -103,12 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchMessages() {
-        try {
-            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ threadId: currentThreadId, userName: currentUserName, lastMessageId })
-            });
+    try {
+        const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                threadId: currentThreadId, 
+                userName: currentUserName, 
+                lastMessageId 
+            })
+        });
 
             if (!response.ok) {
                 throw new Error('Failed to fetch messages');
@@ -165,9 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isUser) {
             messageElement.classList.add('user-message');
+            sender = currentUserName;  // Use the current user's name
         } else if (isDiscordUser) {
             messageElement.classList.add('discord-user-message');
-            sender = `DiscordUser (${sender})`;
+            // Only prepend "DiscordUser" if it's not the Lua Services bot
+            sender = sender === "Lua Services" ? sender : `DiscordUser (${sender})`;
         } else if (isDiscord) {
             messageElement.classList.add('discord-message');
         } else {
