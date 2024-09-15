@@ -1,39 +1,54 @@
-// netlify/functions/fetchDiscordMessages.js
-
 const axios = require('axios');
 
 exports.handler = async (event, context) => {
-    const { threadId } = JSON.parse(event.body);
+  const { threadId } = JSON.parse(event.body);
+  const discordBotToken = process.env.DISCORD_BOT_TOKEN;
 
-    if (!threadId) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Missing threadId' }),
-        };
-    }
+  if (!discordBotToken) {
+    console.error('DISCORD_BOT_TOKEN is not set');
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Server configuration error: Missing bot token' }),
+    };
+  }
 
-    const discordApiUrl = `https://discord.com/api/v9/channels/${threadId}/messages`;
-    const discordBotToken = process.env.DISCORD_BOT_TOKEN;
+  console.log('Attempting to fetch messages for threadId:', threadId);
 
-    try {
-        const response = await axios.get(discordApiUrl, {
-            headers: { Authorization: `Bot ${discordBotToken}` },
-        });
+  const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
 
-        const messages = response.data.map(msg => ({
-            sender: msg.author.username,
-            content: msg.content,
-        }));
+  try {
+    const response = await axios.get(discordApiUrl, {
+      headers: { 
+        Authorization: `Bot ${discordBotToken}`,
+        'Content-Type': 'application/json'
+      },
+    });
 
-        return {
-            statusCode: 200,
-            body: JSON.stringify(messages),
-        };
-    } catch (error) {
-        console.error('Error fetching messages from Discord:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to fetch messages' }),
-        };
-    }
+    console.log('Discord API Response:', response.status, response.statusText);
+
+    const messages = response.data.map(msg => ({
+      sender: msg.author.username,
+      content: msg.content,
+    }));
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(messages),
+    };
+  } catch (error) {
+    console.error('Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message
+    });
+
+    return {
+      statusCode: error.response?.status || 500,
+      body: JSON.stringify({ 
+        error: 'Failed to fetch messages', 
+        details: error.response?.data || error.message 
+      }),
+    };
+  }
 };

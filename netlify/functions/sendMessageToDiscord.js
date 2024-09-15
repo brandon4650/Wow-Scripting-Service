@@ -1,9 +1,16 @@
-// netlify/functions/sendMessageToDiscord.js
-
 const axios = require('axios');
 
 exports.handler = async (event, context) => {
     const { threadId, userName, content } = JSON.parse(event.body);
+    const discordBotToken = process.env.DISCORD_BOT_TOKEN;
+
+    if (!discordBotToken) {
+        console.error('DISCORD_BOT_TOKEN is not set');
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Server configuration error: Missing bot token' }),
+        };
+    }
 
     if (!threadId || !content) {
         return {
@@ -12,25 +19,41 @@ exports.handler = async (event, context) => {
         };
     }
 
-    const discordApiUrl = `https://discord.com/api/v9/channels/${threadId}/messages`;
-    const discordBotToken = process.env.DISCORD_BOT_TOKEN;
+    const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
 
     try {
-        await axios.post(
+        console.log(`Attempting to send message to thread ${threadId}`);
+        const response = await axios.post(
             discordApiUrl,
-            { content: content },
-            { headers: { Authorization: `Bot ${discordBotToken}` } }
+            { content: `${userName}: ${content}` },
+            { 
+                headers: { 
+                    Authorization: `Bot ${discordBotToken}`,
+                    'Content-Type': 'application/json'
+                } 
+            }
         );
+
+        console.log('Message sent successfully:', response.status, response.statusText);
 
         return {
             statusCode: 200,
             body: JSON.stringify({ message: 'Message sent successfully' }),
         };
     } catch (error) {
-        console.error('Error sending message to Discord:', error);
+        console.error('Error details:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message
+        });
+
         return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to send message' }),
+            statusCode: error.response?.status || 500,
+            body: JSON.stringify({ 
+                error: 'Failed to send message', 
+                details: error.response?.data || error.message 
+            }),
         };
     }
 };

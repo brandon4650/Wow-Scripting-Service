@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Function to send messages to Discord via Netlify Function
         async function sendMessage(message) {
             try {
+                console.log('Sending message:', message);
                 const response = await fetch('/.netlify/functions/sendMessageToDiscord', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -102,21 +103,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         content: message
                     }),
                 });
-    
+        
                 if (!response.ok) {
-                    throw new Error('Failed to send message');
+                    const errorData = await response.json();
+                    console.error('Error response from sendMessageToDiscord:', errorData);
+                    throw new Error(errorData.error || 'Failed to send message');
                 }
-    
-                chatInput.value = ''; // Clear input field
+        
                 const result = await response.json();
-                console.log('Message sent:', result.message);
+                console.log('Message sent successfully:', result);
+                
+                // Clear input field and add message to chat
+                chatInput.value = '';
+                addMessageToChat(userName, message);
             } catch (error) {
                 console.error('Error sending message:', error);
-                alert(`Error sending message: ${error.message}`);
+                addMessageToChat('System', 'Failed to send message. Please try again later.');
             }
         }
-    
-        // Event handler for sending messages
+        
+        // Update the event listener for the send button
         sendChatBtn.onclick = () => {
             const message = chatInput.value.trim();
             if (message) {
@@ -127,24 +133,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // Function to fetch messages from Discord and update chat
         async function fetchMessages() {
             try {
-                const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ threadId: threadId }),
-                });
-    
-                if (!response.ok) {
-                    throw new Error('Failed to fetch messages');
-                }
-    
-                const messages = await response.json();
-                messages.forEach(msg => {
-                    addMessageToChat(msg.sender, msg.content);
-                });
+              console.log('Fetching messages for threadId:', threadId);
+              const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ threadId: threadId }),
+              });
+          
+              if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error response from fetchDiscordMessages:', errorData);
+                throw new Error(errorData.error || 'Failed to fetch messages');
+              }
+          
+              const messages = await response.json();
+              console.log('Fetched messages:', messages);
+              messages.forEach(msg => {
+                addMessageToChat(msg.sender, msg.content);
+              });
             } catch (error) {
-                console.error('Error fetching messages:', error);
+              console.error('Error in fetchMessages:', error);
+              addMessageToChat('System', 'Failed to load messages. Please try again later.');
             }
-        }
+          }
     
         // Poll for new messages every 5 seconds
         setInterval(fetchMessages, 5000);
