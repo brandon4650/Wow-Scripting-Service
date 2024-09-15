@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Thread ID:', threadId);
         console.log('Chat Title:', chatTitle);
         console.log('User Name:', userName);
+    
         chatWindow.style.display = 'flex'; // Show the chat window
         const chatTitleElement = document.getElementById('chatTitle');
         chatTitleElement.textContent = chatTitle;
@@ -88,32 +89,72 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear previous messages
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
-
-        const socket = new WebSocket(`wss://your-server-url/websocket?threadId=${threadId}`);
-
-        socket.onopen = () => {
-            console.log('WebSocket connection established');
-        };
     
-        socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            addMessageToChat(message.sender, message.content);
-        };
+        // Function to send messages to Discord via Netlify Function
+        async function sendMessage(message) {
+            try {
+                const response = await fetch('/.netlify/functions/sendMessageToDiscord', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        threadId: threadId,
+                        userName: userName,
+                        content: message
+                    }),
+                });
     
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+    
+                chatInput.value = ''; // Clear input field
+                const result = await response.json();
+                console.log('Message sent:', result.message);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert(`Error sending message: ${error.message}`);
+            }
+        }
+    
+        // Event handler for sending messages
         sendChatBtn.onclick = () => {
             const message = chatInput.value.trim();
             if (message) {
-                socket.send(JSON.stringify({ sender: userName, content: message }));
-                chatInput.value = '';
+                sendMessage(message);
             }
         };
-
-        // Simulate receiving a message (in reality, this would come from the WebSocket)
+    
+        // Function to fetch messages from Discord and update chat
+        async function fetchMessages() {
+            try {
+                const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ threadId: threadId }),
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Failed to fetch messages');
+                }
+    
+                const messages = await response.json();
+                messages.forEach(msg => {
+                    addMessageToChat(msg.sender, msg.content);
+                });
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        }
+    
+        // Poll for new messages every 5 seconds
+        setInterval(fetchMessages, 5000);
+    
+        // Simulate initial greeting message
         setTimeout(() => {
             addMessageToChat('Support', `Welcome to ${chatTitle}! How can we assist you today?`);
         }, 1000);
     }
-
+    
     function addMessageToChat(sender, message) {
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
