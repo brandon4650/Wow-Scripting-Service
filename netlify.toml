@@ -1,27 +1,17 @@
-[
-build
-]
+[build]
   command = "npm install && npm install @netlify/plugin-websocket-support && npm run build"
   functions = "netlify/functions"
   publish = "."
 
-[
-functions
-]
+[functions]
   node_bundler = "esbuild"
   external_node_modules = ["discord.js", "socket.io", "@netlify/websocket-support"]
 
-[
-functions."*"
-]
+[functions."*"]
   timeout = 30
 
-[[
-plugins
-]]
+[[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
-[[
-plugins
-]]
+[[plugins]]
   package = "@netlify/plugin-websocket-support"
