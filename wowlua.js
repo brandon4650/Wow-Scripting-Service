@@ -169,7 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         } catch (error) {
-            console.error('Error in fetchMessages:', error);
+            if (retries > 0) {
+                console.log(`Retrying fetch... (${retries} attempts left)`);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
+                return fetchMessages(retries - 1);
+            }
+            console.error('Error in fetchMessages after all retries:', error);
         }
     }
     
