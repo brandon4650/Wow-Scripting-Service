@@ -97,35 +97,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function connectWebSocket(threadId, userName) {
-        socket = new WebSocket(`wss://${window.location.hostname}/.netlify/functions/fetchDiscordMessages`);
+        const wsUrl = `wss://${window.location.hostname}/.netlify/functions/fetchDiscordMessages`;
+        console.log('Attempting to connect to WebSocket:', wsUrl);
+        
+        socket = new WebSocket(wsUrl);
         
         socket.onopen = () => {
-            console.log('Connected to server');
+            console.log('WebSocket connection opened');
             socket.send(JSON.stringify({ type: 'joinThread', threadId, userName }));
         };
 
         socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'message') {
-                data.messages.forEach(message => {
-                    addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
-                });
-            } else if (data.type === 'error') {
-                console.error('Socket error:', data.message);
-                addMessageToChat('System', 'An error occurred. Please try again.');
+            console.log('Received WebSocket message:', event.data);
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'message') {
+                    data.messages.forEach(message => {
+                        addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
+                    });
+                } else if (data.type === 'error') {
+                    console.error('Socket error:', data.message);
+                    addMessageToChat('System', `An error occurred: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
             }
         };
 
         socket.onerror = (error) => {
             console.error('WebSocket error:', error);
             addMessageToChat('System', 'Connection error. Attempting to reconnect...');
-            setTimeout(() => connectWebSocket(threadId, userName), 5000);
         };
 
         socket.onclose = (event) => {
             console.log('WebSocket closed:', event);
             if (!event.wasClean) {
-                addMessageToChat('System', 'Connection lost. Attempting to reconnect...');
+                addMessageToChat('System', `Connection lost (${event.code}). Attempting to reconnect...`);
                 setTimeout(() => connectWebSocket(threadId, userName), 5000);
             }
         };
@@ -133,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function sendMessage(message) {
         try {
-            if (socket.readyState === WebSocket.OPEN) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({
                     type: 'message',
                     threadId: currentThreadId,
@@ -144,8 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 addMessageToChat(currentUserName, message, true);
                 chatInput.value = '';
             } else {
-                console.error('WebSocket is not open');
-                addMessageToChat('System', 'Connection is not ready. Please try again.');
+                console.error('WebSocket is not open. ReadyState:', socket ? socket.readyState : 'socket is null');
+                addMessageToChat('System', 'Connection is not ready. Please try again in a moment.');
             }
         } catch (error) {
             console.error('Error sending message:', error);

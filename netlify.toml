@@ -2,3 +2,15 @@
 command = "npm install && npm run build"
 publish = "."
 functions = "netlify/functions"
+
+[[redirects]]
+from = "/.netlify/functions/*"
+to = "/.netlify/functions/:splat"
+status = 200
+force = true
+
+[functions]
+node_bundler = "esbuild"
+
+[dev]
+  autoLaunch = false

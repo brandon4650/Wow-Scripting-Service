@@ -8,19 +8,18 @@ exports.handler = async (event, context) => {
 
     if (event.httpMethod === 'GET' && event.headers.upgrade && event.headers.upgrade.toLowerCase() === 'websocket') {
         console.log('WebSocket upgrade request received');
-        const { awsContext } = context.clientContext || {};
-        if (awsContext) {
-            if (!wss) {
-                console.log('Creating new WebSocket server');
-                wss = new WebSocket.Server({ noServer: true });
-                setupWebSocketServer(wss);
-            }
-            const ws = await new Promise((resolve) => {
-                wss.handleUpgrade(event, event.headers['sec-websocket-key'], event.headers['sec-websocket-protocol'], resolve);
-            });
-            console.log('WebSocket connection established');
-            return { statusCode: 101 };
+        if (!wss) {
+            console.log('Creating new WebSocket server');
+            wss = new WebSocket.Server({ noServer: true });
+            setupWebSocketServer(wss);
         }
+        
+        const ws = await new Promise((resolve) => {
+            wss.handleUpgrade(event, event.headers['sec-websocket-key'], event.headers['sec-websocket-protocol'], resolve);
+        });
+        
+        console.log('WebSocket connection established');
+        return { statusCode: 101 };
     }
 
     // Handle HTTP requests
@@ -70,7 +69,7 @@ function setupWebSocketServer(wss) {
         console.log('Client connected to WebSocket');
 
         ws.on('message', async (message) => {
-            console.log('Received message:', message);
+            console.log('Received message:', message.toString());
             try {
                 const data = JSON.parse(message);
                 if (data.type === 'joinThread') {
@@ -86,6 +85,10 @@ function setupWebSocketServer(wss) {
 
         ws.on('close', () => {
             console.log('Client disconnected from WebSocket');
+        });
+
+        ws.on('error', (error) => {
+            console.error('WebSocket error:', error);
         });
     });
 }
