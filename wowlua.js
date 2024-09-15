@@ -104,6 +104,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessageToChat(sender, message) {
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message');
+        
+        if (sender === 'Support') {
+            messageElement.classList.add('support-message');
+        } else {
+            messageElement.classList.add('user-message');
+        }
+        
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
