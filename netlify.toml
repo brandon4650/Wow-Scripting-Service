@@ -7,15 +7,6 @@
   node_bundler = "esbuild"
   external_node_modules = ["discord.js", "ws"]
 
-[[redirects]]
-  from = "/.netlify/functions/fetchDiscordMessages"
-  to = "/.netlify/functions/fetchDiscordMessages"
-  status = 200
-  force = true
-
-[redirects.headers]
-  X-From = "Netlify"
-
 [dev]
   functionsPort = 8888
 

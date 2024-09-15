@@ -10,12 +10,13 @@
   },
   "dependencies": {
     "axios": "^1.7.7",
-    "node-fetch": "^2.6.12",
     "discord.js": "^13.6.0",
     "socket.io": "^4.6.1",
-    "socket.io-client": "^4.6.1"
+    "socket.io-client": "^4.6.1",
+    "ws": "^8.13.0"
   },
   "devDependencies": {
-    "netlify-cli": "^15.9.1"
+    "netlify-cli": "^15.9.1",
+    "@netlify/plugin-functions-install-core": "^1.0.0"
   }
 }
