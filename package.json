@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "WoW Lua Scripting Service web application",
   "main": "wowlua.js",
+  "type": "module",
   "scripts": {
     "start": "netlify dev",
     "build": "# Add build script if needed"
