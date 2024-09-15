@@ -179,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false) {
+        console.log('Adding message:', { sender, message, isUser, isDiscord, isDiscordUser });
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
