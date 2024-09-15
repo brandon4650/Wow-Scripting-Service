@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "netlify dev",
-    "build": "echo 'No build step needed'"
+    "build": "echo 'No build step needed'",
+    "postinstall": "npm install -g netlify-cli"
   },
   "dependencies": {
     "axios": "^1.7.7",
