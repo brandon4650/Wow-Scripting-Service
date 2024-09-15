@@ -173,7 +173,7 @@ input, select, textarea {
 
 .user-message {
     align-self: flex-end; 
-    background-color: #3a3a5a;
+    background-color: #2eb82e; /* Updated to green */
 }
 
 .support-message {
@@ -185,6 +185,7 @@ input, select, textarea {
     display: flex;
     padding: 10px;
     background-color: #1a1a3a;
+    margin-top: auto; /* Pushes the input area to the bottom */
 }
 
 #chatInput {
@@ -229,6 +230,8 @@ input, select, textarea {
 .chat-window {
     width: 350px;  
     height: 450px;
+    display: flex;
+    flex-direction: column; /* Enables pushing the input area to the bottom */
 }
 
 #chatTitle {
