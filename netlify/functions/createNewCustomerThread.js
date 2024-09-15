@@ -4,13 +4,21 @@ exports.handler = async (event) => {
   const { DISCORD_TOKEN, NEW_CUSTOMER_CHANNEL, WEBHOOK_URL } = process.env;
   
   if (!DISCORD_TOKEN || !NEW_CUSTOMER_CHANNEL || !WEBHOOK_URL) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Server configuration error' }) };
+    console.error('Missing environment variables');
+    return { 
+      statusCode: 500, 
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ error: 'Server configuration error' }) 
+    };
   }
 
   try {
     const { referral, discordName, email, server, scriptType, description } = JSON.parse(event.body);
     
-    // Create a thread in Discord
+    console.log('Attempting to create Discord thread...');
     const threadResponse = await fetch(`https://discord.com/api/v10/channels/${NEW_CUSTOMER_CHANNEL}/threads`, {
       method: 'POST',
       headers: {
@@ -25,13 +33,16 @@ exports.handler = async (event) => {
     });
 
     if (!threadResponse.ok) {
-      throw new Error('Failed to create Discord thread');
+      const errorData = await threadResponse.text();
+      console.error('Discord API Error:', threadResponse.status, errorData);
+      throw new Error(`Discord API responded with status ${threadResponse.status}: ${errorData}`);
     }
 
     const threadData = await threadResponse.json();
+    console.log('Thread created successfully:', threadData.id);
 
-    // Post initial message in the thread
-    await fetch(`${WEBHOOK_URL}?thread_id=${threadData.id}`, {
+    console.log('Posting initial message to thread...');
+    const messageResponse = await fetch(`${WEBHOOK_URL}?thread_id=${threadData.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -45,7 +56,10 @@ exports.handler = async (event) => {
       })
     });
 
-    // Return the success response with CORS headers
+    if (!messageResponse.ok) {
+      console.error('Failed to post initial message:', await messageResponse.text());
+    }
+
     return {
       statusCode: 200,
       headers: {
@@ -57,17 +71,15 @@ exports.handler = async (event) => {
         chatTitle: 'New Customer Chat'
       })
     };
-
   } catch (error) {
-    console.error('Error:', error);
-    // Return the error response with CORS headers
+    console.error('Error in createNewCustomerThread:', error);
     return { 
       statusCode: 500, 
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
       },
-      body: JSON.stringify({ error: 'Failed to process request' }) 
+      body: JSON.stringify({ error: error.message || 'Failed to process request' }) 
     };
   }
 };
