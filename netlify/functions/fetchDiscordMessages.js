@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
     try {
         const { threadId, after, userName } = JSON.parse(event.body);
         const discordBotToken = process.env.DISCORD_TOKEN;
