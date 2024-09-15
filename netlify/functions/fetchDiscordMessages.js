@@ -37,14 +37,14 @@ exports.handler = async (event, context) => {
         console.log('Raw Discord response:', JSON.stringify(response.data, null, 2));
 
         const messages = response.data
-            .filter(msg => msg.author.username !== 'Lua Script Services')
-            .map(msg => ({
-                sender: msg.author.username,
-                content: msg.content,
-                timestamp: new Date(msg.timestamp).getTime(),
-                isDiscord: true,
-                isDiscordUser: msg.author.username !== userName
-            }));
+        .filter(msg => msg.author.username !== 'Lua Script Services' && msg.content.trim() !== '')
+        .map(msg => ({
+            sender: msg.author.username,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp).getTime(),
+            isDiscord: true,
+            isDiscordUser: msg.author.username !== userName
+        }));
 
         console.log(`Processed ${messages.length} messages:`, JSON.stringify(messages, null, 2));
 
