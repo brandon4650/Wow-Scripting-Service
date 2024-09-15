@@ -4,19 +4,26 @@ const WebSocket = require('ws');
 let wss;
 
 exports.handler = async (event, context) => {
-    if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/fetchDiscordMessages') {
+    if (event.httpMethod === 'GET' && event.headers.upgrade?.toLowerCase() === 'websocket') {
         // WebSocket upgrade
         const { awsContext } = context.clientContext || {};
-        if (awsContext && awsContext.websocket) {
+        if (awsContext) {
             if (!wss) {
                 wss = new WebSocket.Server({ noServer: true });
                 setupWebSocketServer(wss);
             }
-            return awsContext.websocket.upgrade();
+            const ws = await new Promise((resolve) => {
+                wss.handleUpgrade(event, event.headers['sec-websocket-key'], event.headers['sec-websocket-protocol'], resolve);
+            });
+            return { statusCode: 101 };
         }
     }
 
     // Handle HTTP requests
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
+
     const { threadId, userName } = JSON.parse(event.body);
     const discordBotToken = process.env.DISCORD_TOKEN;
 

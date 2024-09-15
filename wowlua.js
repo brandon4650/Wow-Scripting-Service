@@ -89,6 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
     
+        connectWebSocket(threadId, userName);
+
+        setTimeout(() => {
+            addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
+        }, 1000);
+    }
+
+    function connectWebSocket(threadId, userName) {
         socket = new WebSocket(`wss://${window.location.hostname}/.netlify/functions/fetchDiscordMessages`);
         
         socket.onopen = () => {
@@ -110,12 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.onerror = (error) => {
             console.error('WebSocket error:', error);
-            addMessageToChat('System', 'Connection error. Please try again later.');
+            addMessageToChat('System', 'Connection error. Attempting to reconnect...');
+            setTimeout(() => connectWebSocket(threadId, userName), 5000);
         };
 
-        setTimeout(() => {
-            addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
-        }, 1000);
+        socket.onclose = (event) => {
+            console.log('WebSocket closed:', event);
+            if (!event.wasClean) {
+                addMessageToChat('System', 'Connection lost. Attempting to reconnect...');
+                setTimeout(() => connectWebSocket(threadId, userName), 5000);
+            }
+        };
     }
     
     async function sendMessage(message) {
