@@ -68,7 +68,8 @@ async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUs
                 isDiscord: true,
                 isDiscordUser: msg.author.id !== repUserId && msg.author.username !== 'Lua Services',
                 isLuaServices: msg.author.username === 'Lua Services'
-            }));
+            }))
+            .reverse(); // Reverse the order to get oldest messages first
     } catch (error) {
         console.error('Error fetching messages from Discord:', error);
         throw error;

@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentThreadId = threadId;
         currentChatTitle = chatTitle;
         currentUserName = userName;
+        lastMessageId = null; // Reset lastMessageId when initializing chat
     
         chatWindow.style.display = 'flex';
         const chatTitleElement = document.getElementById('chatTitle');
@@ -91,17 +92,18 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.innerHTML = '';
     
         startPolling();
-
+    
         setTimeout(() => {
             addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
         }, 1000);
     }
-
+    
     function startPolling() {
         fetchMessages();
-        pollingInterval = setInterval(fetchMessages, 5000); // Poll every 5 seconds
+        clearInterval(pollingInterval); // Clear any existing interval
+        pollingInterval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     }
-
+    
     async function fetchMessages() {
         try {
             const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
@@ -125,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching messages:', error);
             addMessageToChat('System', 'Failed to fetch messages. Please try again later.');
         }
-    }
+    }    
     
     async function sendMessage(message) {
         try {
