@@ -20,13 +20,15 @@ exports.handler = async (event, context) => {
 
             socket.on('message', async ({ threadId, userName, content }) => {
                 try {
-                    await sendMessageToDiscord(threadId, userName, content);
-                    await fetchAndEmitMessages(threadId, userName);
+                  console.log('Received message:', { threadId, userName, content });
+                  await sendMessageToDiscord(threadId, userName, content);
+                  console.log('Message sent to Discord');
+                  await fetchAndEmitMessages(threadId, userName);
                 } catch (error) {
-                    console.error('Error handling message:', error);
+                  console.error('Error handling message:', error);
+                  socket.emit('error', { message: 'Failed to send message' });
                 }
-            });
-
+              });
             socket.on('disconnect', () => {
                 console.log('Client disconnected');
             });
@@ -112,21 +114,23 @@ exports.handler = async (event, context) => {
 
     async function sendMessageToDiscord(threadId, userName, content) {
         try {
-            const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
-
-            await axios.post(
-                discordApiUrl,
-                { content: `${userName}: ${content}` },
-                {
-                    headers: {
-                        Authorization: `Bot ${discordBotToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
+          const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
+      
+          const response = await axios.post(
+            discordApiUrl,
+            { content: `${userName}: ${content}` },
+            {
+              headers: {
+                Authorization: `Bot ${discordBotToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+      
+          console.log('Message sent to Discord:', response.data);
         } catch (error) {
-            console.error('Error sending message to Discord:', error);
-            throw error;
+          console.error('Error sending message to Discord:', error);
+          throw error;
         }
-    }
+      }
 };
