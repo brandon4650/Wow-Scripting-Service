@@ -1,29 +1,20 @@
-[
-build
-]
+[build]
   command = "npm install && npm run build"
   functions = "netlify/functions"
   publish = "."
 
-[
-functions
-]
+[functions]
   node_bundler = "esbuild"
   external_node_modules = ["discord.js", "ws"]
 
-[[
-redirects
-]]
+[[redirects]]
   from = "/.netlify/functions/fetchDiscordMessages"
   to = "/.netlify/functions/fetchDiscordMessages"
   status = 200
   force = true
-  [
-redirects.headers
-]
-    X-From = "Netlify"
 
-[
-dev
-]
+[redirects.headers]
+  X-From = "Netlify"
+
+[dev]
   functionsPort = 8000
