@@ -117,10 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 addMessageToChat(userName, message, true);
                 chatInput.value = '';
-            }   catch (error) {
+              } catch (error) {
                 console.error('Error sending message:', error);
                 addMessageToChat('System', 'Failed to send message. Please try again later.');
-            }
+              }
         }
         
         // Update the event listener for the send button
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
              if (messages.length > 0) {
                console.log('Fetched new messages:', messages);
                messages.forEach(msg => {
-                 addMessageToChat(msg.sender, msg.content, !msg.isDiscord);
+                 addMessageToChat(msg.sender, msg.content, false, msg.isDiscord, msg.isDiscordUser);
                  lastMessageTimestamp = Math.max(lastMessageTimestamp, msg.timestamp);
                });
              }
@@ -165,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
              console.error('Error in fetchMessages:', error);
            }
         }
+        
         fetchMessages();
         // Fetch messages every 5 seconds
         setInterval(fetchMessages, 5000);
@@ -175,15 +176,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     
-    function addMessageToChat(sender, message, isUser = false) {
+    function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false) {
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
         
         if (isUser) {
-            messageElement.classList.add('user-message');
+          messageElement.classList.add('user-message');
+        } else if (isDiscordUser) {
+          messageElement.classList.add('discord-user-message');
+          sender = `DiscordUser (${sender})`;
+        } else if (isDiscord) {
+          messageElement.classList.add('discord-message');
         } else {
-            messageElement.classList.add('discord-message');
+          messageElement.classList.add('support-message');
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;

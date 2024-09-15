@@ -186,6 +186,12 @@ input, select, textarea {
     margin-right: auto;
 }
 
+.discord-user-message {
+    align-self: flex-start;
+    background-color: #4a76a8; /* Different shade of blue for Discord users */
+    color: white;
+}
+
 .support-message {
     align-self: flex-start;
     background-color: #00a8ff;

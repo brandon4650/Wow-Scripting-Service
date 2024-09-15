@@ -25,12 +25,13 @@ exports.handler = async (event, context) => {
     });
 
     const messages = response.data
-      .filter(msg => msg.author.username !== 'Lua Script Services') // Filter out only Lua Script Services messages
+      .filter(msg => msg.author.username !== 'Lua Script Services')
       .map(msg => ({
         sender: msg.author.username,
         content: msg.content,
         timestamp: new Date(msg.timestamp).getTime(),
-        isDiscord: true
+        isDiscord: true,
+        isDiscordUser: msg.author.username !== userName // Flag to identify Discord users
       }));
 
     return {
