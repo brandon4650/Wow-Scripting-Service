@@ -18,11 +18,17 @@ exports.handler = async (event) => {
   try {
     const { scriptName, discordName, email, server, scriptType, issueDescription } = JSON.parse(event.body);
     
-    // Log received data
-    console.log('Received issue data:', { scriptName, discordName, email, server, scriptType, issueDescription });
-
+    // Validate required fields
     if (!scriptName || !discordName || !email || !server || !scriptType || !issueDescription) {
-      throw new Error('Missing required fields');
+      console.error('Missing required fields');
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+        body: JSON.stringify({ error: 'Missing required fields' })
+      };
     }
 
     console.log('Attempting to create Discord thread for script issue...');
@@ -40,10 +46,6 @@ exports.handler = async (event) => {
         }
       }
     );
-
-    if (!threadResponse.data || !threadResponse.data.id) {
-      throw new Error('Failed to create Discord thread');
-    }
 
     const threadData = threadResponse.data;
     console.log('Thread created successfully:', threadData.id);
