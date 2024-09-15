@@ -1,59 +1,87 @@
 const axios = require('axios');
 
-exports.handler = async (event, context) => {
-    const { threadId, userName, content } = JSON.parse(event.body);
-    const discordBotToken = process.env.DISCORD_TOKEN;
+exports.handler = async (event) => {
+  const { DISCORD_TOKEN, ISSUE_CHANNEL, WEBHOOK_ISSUE } = process.env;
+  
+  if (!DISCORD_TOKEN || !ISSUE_CHANNEL || !WEBHOOK_ISSUE) {
+    console.error('Missing environment variables');
+    return { 
+      statusCode: 500, 
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ error: 'Server configuration error' }) 
+    };
+  }
 
-    if (!discordBotToken) {
-        console.error('DISCORD_TOKEN is not set');
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Server configuration error: Missing bot token' }),
-        };
+  try {
+    const { scriptName, discordName, email, server, scriptType, issueDescription } = JSON.parse(event.body);
+    
+    console.log('Attempting to create Discord thread for script issue...');
+    const threadResponse = await axios.post(
+      `https://discord.com/api/v10/channels/${ISSUE_CHANNEL}/threads`,
+      {
+        name: `Script Issue - ${scriptName}`,
+        type: 11,  // Private thread
+        auto_archive_duration: 1440  // Auto archive after 24 hours
+      },
+      {
+        headers: {
+          'Authorization': `Bot ${DISCORD_TOKEN}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    if (!threadResponse.data || !threadResponse.data.id) {
+      throw new Error('Failed to create Discord thread');
     }
 
-    if (!threadId || !content) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Missing threadId or message content' }),
-        };
+    const threadData = threadResponse.data;
+    console.log('Thread created successfully:', threadData.id);
+
+    console.log('Posting initial message to thread...');
+    const messageResponse = await axios.post(
+      `${WEBHOOK_ISSUE}?thread_id=${threadData.id}`,
+      {
+        content: `Script Issue Report:
+        Script Name: ${scriptName}
+        Discord Name: ${discordName}
+        Email: ${email}
+        Server: ${server}
+        Script Type: ${scriptType}
+        Issue Description: ${issueDescription}`
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+
+    if (!messageResponse.data) {
+      console.error('Failed to post initial message');
     }
 
-    const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
-
-    try {
-        console.log(`Attempting to send message to thread ${threadId}`);
-        const response = await axios.post(
-            discordApiUrl,
-            { content: `${userName}: ${content}` },
-            { 
-                headers: { 
-                    Authorization: `Bot ${discordBotToken}`,
-                    'Content-Type': 'application/json'
-                } 
-            }
-        );
-
-        console.log('Message sent successfully:', response.status, response.statusText);
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'Message sent successfully' }),
-        };
-    } catch (error) {
-        console.error('Error details:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            message: error.message
-        });
-
-        return {
-            statusCode: error.response?.status || 500,
-            body: JSON.stringify({ 
-                error: 'Failed to send message', 
-                details: error.response?.data || error.message 
-            }),
-        };
-    }
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ 
+        threadId: threadData.id,
+        chatTitle: `Script Issue - ${scriptName}`
+      })
+    };
+  } catch (error) {
+    console.error('Error in createScriptIssueThread:', error);
+    return { 
+      statusCode: 500, 
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ error: error.message || 'Failed to process request' }) 
+    };
+  }
 };
