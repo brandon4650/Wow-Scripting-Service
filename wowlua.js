@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentThreadId, currentChatTitle, currentUserName;
     let lastMessageTimestamp = 0;
+    let socket;
 
     newCustomerBtn.addEventListener('click', () => {
         newCustomerModal.style.display = 'block';
@@ -91,41 +92,67 @@ document.addEventListener('DOMContentLoaded', () => {
     
         chatWindow.style.display = 'flex';
         const chatTitleElement = document.getElementById('chatTitle');
-        chatTitleElement.textContent = chatTitle;
+        chatTitleElement.textContent = currentChatTitle;
     
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
     
-        fetchMessages();
-        setInterval(fetchMessages, 5000);
-    
+        socket = io();
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            socket.emit('joinThread', { threadId, userName });
+        });
+
+        socket.on('message', (message) => {
+            addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
+            lastMessageTimestamp = message.timestamp || Date.now();
+        });
+
         setTimeout(() => {
-            addMessageToChat('Support', `Welcome to ${chatTitle}! How can we assist you today?`);
+            addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
         }, 1000);
+
+        fetchMessages(); // Fetch messages when initializing the chat
+    }
+
+    async function fetchMessages() {
+        try {
+            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    threadId: currentThreadId,
+                    after: lastMessageTimestamp,
+                    userName: currentUserName
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error response from fetchDiscordMessages:', errorData);
+                throw new Error(errorData.error || 'Failed to fetch messages');
+            }
+
+            const messages = await response.json();
+            messages.forEach((message) => {
+                addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
+                lastMessageTimestamp = Math.max(lastMessageTimestamp, message.timestamp);
+            });
+        } catch (error) {
+            console.error('Error in fetchMessages:', error);
+        }
     }
     
     async function sendMessage(message) {
         try {
             console.log('Sending message:', message);
-            const response = await fetch('/.netlify/functions/sendMessageToDiscord', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    threadId: currentThreadId,
-                    userName: currentUserName,
-                    content: message
-                }),
+            socket.emit('message', {
+                threadId: currentThreadId,
+                userName: currentUserName,
+                content: message,
+                timestamp: Date.now() // Include timestamp when sending message
             });
-    
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error response from sendMessageToDiscord:', errorData);
-                throw new Error(errorData.error || 'Failed to send message');
-            }
-    
-            const result = await response.json();
-            console.log('Message sent successfully:', result);
-            
+
             addMessageToChat(currentUserName, message, true);
             chatInput.value = '';
         } catch (error) {
@@ -140,38 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage(message);
         }
     };
-
-    async function fetchMessages() {
-        try {
-            console.log('Fetching messages for threadId:', currentThreadId);
-            const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    threadId: currentThreadId, 
-                    after: lastMessageTimestamp, 
-                    userName: currentUserName 
-                }),
-            });
-     
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error response from fetchDiscordMessages:', errorData);
-                throw new Error(errorData.error || 'Failed to fetch messages');
-            }
-     
-            const messages = await response.json();
-            if (messages.length > 0) {
-                console.log('Fetched new messages:', messages);
-                messages.forEach(msg => {
-                    addMessageToChat(msg.sender, msg.content, false, msg.isDiscord, msg.isDiscordUser);
-                    lastMessageTimestamp = Math.max(lastMessageTimestamp, msg.timestamp);
-                });
-            }
-        } catch (error) {
-            console.error('Error in fetchMessages:', error);
-        }
-    }
     
     const addedMessages = new Set();
 

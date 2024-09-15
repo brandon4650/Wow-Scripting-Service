@@ -1,60 +1,58 @@
 const axios = require('axios');
+const { Server } = require('socket.io');
+
+let io;
 
 exports.handler = async (event, context) => {
-    try {
-        const { threadId, after, userName } = JSON.parse(event.body);
-        const discordBotToken = process.env.DISCORD_TOKEN;
+    const { threadId, after, userName } = JSON.parse(event.body);
+    const discordBotToken = process.env.DISCORD_TOKEN;
 
-        if (!discordBotToken) {
-            console.error('DISCORD_TOKEN is not set');
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ error: 'Server configuration error: Missing bot token' }),
-            };
-        }
+    if (!io) {
+        io = new Server(event.port);
+        io.on('connection', (socket) => {
+            console.log('Client connected');
 
-        if (!userName) {
-            console.error('userName is not provided');
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'Bad request: userName is required' }),
-            };
-        }
+            socket.on('joinThread', async ({ threadId, userName }) => {
+                console.log(`User ${userName} joined thread ${threadId}`);
+                socket.join(threadId);
+                await fetchAndEmitMessages(threadId, userName);
+            });
 
-        console.log('Fetching messages for threadId:', threadId, 'User:', userName);
+            socket.on('message', async ({ threadId, userName, content }) => {
+                try {
+                    await sendMessageToDiscord(threadId, userName, content);
+                    await fetchAndEmitMessages(threadId, userName);
+                } catch (error) {
+                    console.error('Error handling message:', error);
+                }
+            });
 
-        const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
-        const params = { after, limit: 100 };
-
-        const response = await axios.get(discordApiUrl, {
-            headers: { 
-                Authorization: `Bot ${discordBotToken}`,
-                'Content-Type': 'application/json'
-            },
-            params: params
+            socket.on('disconnect', () => {
+                console.log('Client disconnected');
+            });
         });
+    }
 
-        console.log('Raw Discord response:', JSON.stringify(response.data, null, 2));
+    if (!discordBotToken) {
+        console.error('DISCORD_TOKEN is not set');
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Server configuration error: Missing bot token' }),
+        };
+    }
 
-        const seenMessages = new Set();
-        const messages = response.data
-            .filter(msg => {
-                const key = `${msg.id}-${msg.content}`;
-                if (seenMessages.has(key)) return false;
-                seenMessages.add(key);
-                return msg.author.username !== 'Lua Script Services' && msg.content.trim() !== '';
-            })
-            .map(msg => ({
-                id: msg.id,
-                sender: msg.author.username,
-                content: msg.content,
-                timestamp: new Date(msg.timestamp).getTime(),
-                isDiscord: true,
-                isDiscordUser: msg.author.username !== userName
-            }));
+    if (!userName) {
+        console.error('userName is not provided');
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'Bad request: userName is required' }),
+        };
+    }
 
-        console.log(`Processed ${messages.length} messages:`, JSON.stringify(messages, null, 2));
+    console.log('Fetching messages for threadId:', threadId, 'User:', userName);
 
+    try {
+        const messages = await fetchMessagesFromDiscord(threadId, userName);
         return {
             statusCode: 200,
             body: JSON.stringify(messages),
@@ -71,5 +69,64 @@ exports.handler = async (event, context) => {
                 details: error.message || 'Unknown error'
             }),
         };
+    }
+
+    async function fetchAndEmitMessages(threadId, userName) {
+        try {
+            const messages = await fetchMessagesFromDiscord(threadId, userName);
+            io.to(threadId).emit('message', messages);
+        } catch (error) {
+            console.error('Error fetching and emitting messages:', error);
+        }
+    }
+
+    async function fetchMessagesFromDiscord(threadId, userName) {
+        try {
+            const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
+            const params = { after, limit: 100 };
+
+            const response = await axios.get(discordApiUrl, {
+                headers: {
+                    Authorization: `Bot ${discordBotToken}`,
+                    'Content-Type': 'application/json'
+                },
+                params: params
+            });
+
+            const messages = response.data
+                .filter(msg => msg.author.username !== 'Lua Script Services' && msg.content.trim() !== '')
+                .map(msg => ({
+                    id: msg.id,
+                    sender: msg.author.username,
+                    content: msg.content,
+                    isDiscord: true,
+                    isDiscordUser: msg.author.username !== userName
+                }));
+
+            return messages;
+        } catch (error) {
+            console.error('Error fetching messages from Discord:', error);
+            throw error;
+        }
+    }
+
+    async function sendMessageToDiscord(threadId, userName, content) {
+        try {
+            const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
+
+            await axios.post(
+                discordApiUrl,
+                { content: `${userName}: ${content}` },
+                {
+                    headers: {
+                        Authorization: `Bot ${discordBotToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error sending message to Discord:', error);
+            throw error;
+        }
     }
 };
