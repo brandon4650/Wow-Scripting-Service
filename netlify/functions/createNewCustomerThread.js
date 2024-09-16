@@ -54,11 +54,11 @@ exports.handler = async (event) => {
       }
     );
 
-    // Send an initial "invisible" message
+    // Send an initial welcome message from Lua Services APP
     await axios.post(
       `${WEBHOOK_URL}?thread_id=${threadData.id}`,
       {
-        content: `[INITIAL_MESSAGE]`
+        content: `Welcome to our support chat! How can we assist you today?`
       },
       {
         headers: { 'Content-Type': 'application/json' }

@@ -50,7 +50,7 @@ exports.handler = async (event) => {
     const threadData = threadResponse.data;
     console.log('Thread created successfully:', threadData.id);
 
-    console.log('Posting initial message to thread...');
+    console.log('Posting initial messages to thread...');
     const messageResponse = await axios.post(
       `${WEBHOOK_ISSUE}?thread_id=${threadData.id}`,
       {
@@ -70,6 +70,17 @@ exports.handler = async (event) => {
     if (!messageResponse.data) {
       console.error('Failed to post initial message');
     }
+
+    // Send an initial message from Lua Services APP
+    await axios.post(
+      `${WEBHOOK_ISSUE}?thread_id=${threadData.id}`,
+      {
+        content: `Thank you for reporting this script issue. Our team will review it shortly. Do you have any additional details you'd like to provide?`
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
     return {
       statusCode: 200,
