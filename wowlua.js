@@ -123,13 +123,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
     
-        if (!isReturning) {
-            // For new users, add welcome messages
-            addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
+        // Add welcome messages immediately
+        if (isReturning) {
+            addMessageToChat('Support', `Welcome back to your chat! Your Thread ID is ${threadId}. Please save this ID to return to this chat in the future.`);
+        } else {
+            addMessageToChat('Support', `Welcome to ${currentChatTitle}! Your Thread ID is ${threadId}. Please save this ID to return to this chat if you need to leave and come back later.`);
+            addMessageToChat('Support', `How can we assist you today?`);
         }
     
-        // Start fetching messages (this will handle both new and returning users)
-        fetchMessages(true);
+        // For returning users, fetch all messages
+        if (isReturning) {
+            fetchMessages(true); // Pass true to indicate it's an initial load
+        }
     
         // Start polling for new messages
         startPolling();
@@ -163,18 +168,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatMessages.innerHTML = ''; // Clear existing messages if this is the initial load
                 }
                 messages.forEach(message => {
-                    // Skip the invisible message
-                    if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
-                        addMessageToChat(
-                            message.sender, 
-                            message.content, 
-                            message.sender === currentUserName,
-                            message.isDiscord, 
-                            message.isDiscordUser, 
-                            message.attachment,
-                            isInitialLoad
-                        );
-                    }
+                    addMessageToChat(
+                        message.sender, 
+                        message.content, 
+                        message.sender === currentUserName,
+                        message.isDiscord, 
+                        message.isDiscordUser, 
+                        message.attachment,
+                        isInitialLoad
+                    );
                     lastMessageId = message.id;
                 });
             }
