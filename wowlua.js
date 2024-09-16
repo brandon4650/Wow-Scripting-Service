@@ -160,12 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isReturning) {
                 // For returning users, we'll add messages after the initial support message
                 messages.forEach(message => {
-                    if (!message.isLuaServices && !message.content.includes('[INVISIBLE_MESSAGE]')) {
-                        const messageElement = document.createElement('div');
+                    if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
                         addMessageToChat(
                             message.sender,
                             message.content,
-                            false,
+                            message.isLuaServices, // Set isUser to true for Lua Services messages
                             message.isDiscord,
                             message.isDiscordUser,
                             message.attachment
@@ -176,11 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // For new users, we'll add messages as before
                 messages.forEach(message => {
-                    if (!message.isLuaServices && !message.content.includes('[INVISIBLE_MESSAGE]')) {
+                    if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
                         addMessageToChat(
                             message.sender,
                             message.content,
-                            false,
+                            message.isLuaServices, // Set isUser to true for Lua Services messages
                             message.isDiscord,
                             message.isDiscordUser,
                             message.attachment
@@ -325,6 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
             sender = `DiscordUser (${sender})`;
         } else if (isDiscord) {
             messageElement.classList.add('discord-message');
+        }
+        
+        // Extract the actual message content for Lua Services messages
+        if (sender === 'Lua Services' && message.includes(':')) {
+            const [, actualMessage] = message.split(':', 2);
+            message = actualMessage.trim();
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
