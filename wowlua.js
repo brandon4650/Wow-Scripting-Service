@@ -122,7 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const messages = await response.json();
             messages.forEach(message => {
                 if (!message.isLuaServices) {
-                    addMessageToChat(message.sender, message.content, false, message.isDiscord, message.isDiscordUser);
+                    addMessageToChat(
+                        message.sender, 
+                        message.content, 
+                        false, 
+                        message.isDiscord, 
+                        message.isDiscordUser, 
+                        message.attachment
+                    );
                     lastMessageId = message.id;
                 }
             });
@@ -228,8 +235,26 @@ document.addEventListener('DOMContentLoaded', () => {
             addMessageToChat('System', 'Failed to send file. Please try again later.');
         }
     };
+
+    async function downloadFile(url, filename) {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            addMessageToChat('System', 'Failed to download file. Please try again later.');
+        }
+    }
     
-    function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false) {
+    function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false, attachment = null) {
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
@@ -247,6 +272,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        
+        if (attachment && (attachment.filename.endsWith('.lua') || attachment.filename.endsWith('.txt'))) {
+            const downloadButton = document.createElement('button');
+            downloadButton.textContent = `Download ${attachment.filename}`;
+            downloadButton.onclick = () => downloadFile(attachment.url, attachment.filename);
+            messageElement.appendChild(downloadButton);
+        }
+        
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }

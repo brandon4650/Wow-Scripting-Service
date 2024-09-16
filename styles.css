@@ -184,6 +184,21 @@ input, select, textarea {
     flex-direction: column;
 }
 
+.chat-message button {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    margin-top: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.chat-message button:hover {
+    background-color: #0077b6;
+}
+
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
