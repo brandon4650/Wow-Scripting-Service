@@ -1,4 +1,5 @@
 const axios = require('axios');
+const FormData = require('form-data');
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') {
@@ -23,7 +24,6 @@ exports.handler = async (event) => {
         const buffer = Buffer.from(fileContent, 'utf-8');
 
         // Create a FormData object
-        const FormData = require('form-data');
         const form = new FormData();
         form.append('file', buffer, { filename: fileName });
         form.append('content', `${userName} sent a file: ${fileName}`);

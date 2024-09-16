@@ -191,12 +191,20 @@ document.addEventListener('DOMContentLoaded', () => {
         fileItem.classList.add('file-item');
         fileItem.innerHTML = `
             <span>${fileName}</span>
-            <button onclick="sendFile('${fileName}', '${encodeURIComponent(fileContent)}')">Send</button>
+            <button onclick="sendFile('${fileName}')">Send</button>
         `;
+        fileItem.dataset.content = fileContent;
         uploadedFiles.appendChild(fileItem);
     }
 
-    window.sendFile = async (fileName, fileContent) => {
+    window.sendFile = async (fileName) => {
+        const fileItem = Array.from(uploadedFiles.children).find(item => item.querySelector('span').textContent === fileName);
+        if (!fileItem) {
+            console.error('File not found');
+            return;
+        }
+        const fileContent = fileItem.dataset.content;
+
         try {
             const response = await fetch('/.netlify/functions/sendFileToDiscord', {
                 method: 'POST',
@@ -205,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     threadId: currentThreadId,
                     userName: currentUserName,
                     fileName: fileName,
-                    fileContent: decodeURIComponent(fileContent)
+                    fileContent: fileContent
                 })
             });
 
@@ -214,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             addMessageToChat(currentUserName, `Sent file: ${fileName}`, true);
+            fileItem.remove(); // Remove the file item after sending
         } catch (error) {
             console.error('Error sending file:', error);
             addMessageToChat('System', 'Failed to send file. Please try again later.');
