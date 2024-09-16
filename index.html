@@ -20,7 +20,6 @@
             margin-bottom: 20px; /* Adjust spacing as needed */
         }
     </style>
-    <script src="./decrypt.js" type="module"></script>
 </head>
 <body>
     <div class="container">
@@ -123,23 +122,5 @@
     
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     <script src="wowlua.js"></script>
-    <script src="./decrypt.js" type="module"></script>
-    <script type="module">
-      import { loadAndDecrypt } from './decrypt.js';
-    
-      // Load and decrypt the necessary files
-      loadAndDecrypt('/.netlify/functions/decrypt?file=path/to/encrypted/file1.js.enc')
-        .then(() => {
-          console.log('File 1 decrypted and loaded successfully');
-          return loadAndDecrypt('/.netlify/functions/decrypt?file=path/to/encrypted/file2.js.enc');
-        })
-        .then(() => {
-          console.log('File 2 decrypted and loaded successfully');
-          // Add more decryption calls if needed
-        })
-        .catch(error => {
-          console.error('Error decrypting files:', error);
-        });
-    </script>
 </body>
 </html>
