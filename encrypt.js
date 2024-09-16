@@ -42,7 +42,7 @@ const directoriesToEncrypt = [
 ];
 
 // File types to encrypt
-const fileTypesToEncrypt = ['.js', '.html', '.css', '.json', '.toml'];
+const fileTypesToEncrypt = ['.js', '.html', '.css'];
 
 // Encrypt files in specified directories
 directoriesToEncrypt.forEach(dir => {
