@@ -60,7 +60,7 @@ async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUs
         });
 
         return response.data
-            .filter(msg => msg.content.trim() !== '' || (msg.attachments && msg.attachments.length > 0))
+            .filter(msg => (msg.content.trim() !== '' && msg.content !== '[INITIAL_MESSAGE]') || (msg.attachments && msg.attachments.length > 0))
             .map(msg => ({
                 id: msg.id,
                 sender: msg.author.id === repUserId ? 'Support' : msg.author.username,

@@ -37,8 +37,8 @@ exports.handler = async (event) => {
     const threadData = threadResponse.data;
     console.log('Thread created successfully:', threadData.id);
 
-    console.log('Posting initial message to thread...');
-    const messageResponse = await axios.post(
+    console.log('Posting initial messages to thread...');
+    await axios.post(
       `${WEBHOOK_URL}?thread_id=${threadData.id}`,
       {
         content: `New Customer Request:
@@ -54,9 +54,16 @@ exports.handler = async (event) => {
       }
     );
 
-    if (!messageResponse.data) {
-      console.error('Failed to post initial message');
-    }
+    // Send an initial "invisible" message
+    await axios.post(
+      `${WEBHOOK_URL}?thread_id=${threadData.id}`,
+      {
+        content: `[INITIAL_MESSAGE]`
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
     return {
       statusCode: 200,
