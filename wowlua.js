@@ -85,29 +85,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const threadIdInput = document.getElementById('threadIdInput');
     
     returnToChatBtn.addEventListener('click', async () => {
-      const threadId = threadIdInput.value.trim();
-      if (!threadId) {
-        alert('Please enter a valid Thread ID');
-        return;
-      }
-    
-      try {
-        const response = await fetch('/.netlify/functions/returnToChat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ threadId })
-        });
-    
-        if (!response.ok) {
-          throw new Error('Failed to retrieve chat information');
+        const threadId = threadIdInput.value.trim();
+        if (!threadId) {
+          alert('Please enter a valid Thread ID');
+          return;
         }
-    
-        const chatInfo = await response.json();
-        initializeChat(chatInfo.threadId, chatInfo.chatTitle, chatInfo.discordName);
-      } catch (error) {
-        console.error('Error returning to chat:', error);
-        alert('Failed to return to chat. Please check your Thread ID and try again.');
-      }
+      
+        try {
+          const response = await fetch('/.netlify/functions/returnToChat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ threadId })
+          });
+      
+          if (!response.ok) {
+            throw new Error('Failed to retrieve chat information');
+          }
+      
+          const chatInfo = await response.json();
+          initializeChat(chatInfo.threadId, chatInfo.chatTitle, chatInfo.discordName, true); // Pass true for isReturning
+        } catch (error) {
+          console.error('Error returning to chat:', error);
+          alert('Failed to return to chat. Please check your Thread ID and try again.');
+        }
     });
 
     function initializeChat(threadId, chatTitle, userName, isReturning = false) {
@@ -123,16 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
     
-        startPolling();
-    
-        setTimeout(() => {
-            if (isReturning) {
-                addMessageToChat('Support', `Welcome back to your chat! Your Thread ID is ${threadId}. Please save this ID to return to this chat in the future.`);
-            } else {
+        if (isReturning) {
+            addMessageToChat('Support', `Welcome back to your chat! Your Thread ID is ${threadId}. Please save this ID to return to this chat in the future.`);
+            fetchMessages(true); // Pass true to indicate it's a returning user
+        } else {
+            setTimeout(() => {
                 addMessageToChat('Support', `Welcome to ${currentChatTitle}! Your Thread ID is ${threadId}. Please save this ID to return to this chat if you need to leave and come back later.`);
-            }
-            addMessageToChat('Support', `How can we assist you today?`);
-        }, 1000);
+                addMessageToChat('Support', `How can we assist you today?`);
+            }, 1000);
+        }
+    
+        startPolling();
     }
     
     function startPolling() {
@@ -141,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pollingInterval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     }
     
-    async function fetchMessages() {
+    async function fetchMessages(isReturning = false) {
         try {
             const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
                 method: 'POST',
@@ -154,19 +155,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             const messages = await response.json();
-            messages.forEach(message => {
-                if (!message.isLuaServices) {
-                    addMessageToChat(
-                        message.sender, 
-                        message.content, 
-                        false, 
-                        message.isDiscord, 
-                        message.isDiscordUser, 
-                        message.attachment
-                    );
+            const chatMessages = document.getElementById('chatMessages');
+    
+            if (isReturning) {
+                // For returning users, we'll add messages after the initial support message
+                messages.forEach(message => {
+                    if (!message.isLuaServices && !message.content.includes('[INVISIBLE_MESSAGE]')) {
+                        const messageElement = document.createElement('div');
+                        addMessageToChat(
+                            message.sender,
+                            message.content,
+                            false,
+                            message.isDiscord,
+                            message.isDiscordUser,
+                            message.attachment
+                        );
+                    }
                     lastMessageId = message.id;
-                }
-            });
+                });
+            } else {
+                // For new users, we'll add messages as before
+                messages.forEach(message => {
+                    if (!message.isLuaServices && !message.content.includes('[INVISIBLE_MESSAGE]')) {
+                        addMessageToChat(
+                            message.sender,
+                            message.content,
+                            false,
+                            message.isDiscord,
+                            message.isDiscordUser,
+                            message.attachment
+                        );
+                        lastMessageId = message.id;
+                    }
+                });
+            }
         } catch (error) {
             console.error('Error fetching messages:', error);
             addMessageToChat('System', 'Failed to fetch messages. Please try again later.');
