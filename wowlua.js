@@ -81,7 +81,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function initializeChat(threadId, chatTitle, userName) {
+    const returnToChatBtn = document.getElementById('returnToChatBtn');
+    const threadIdInput = document.getElementById('threadIdInput');
+    
+    returnToChatBtn.addEventListener('click', async () => {
+      const threadId = threadIdInput.value.trim();
+      if (!threadId) {
+        alert('Please enter a valid Thread ID');
+        return;
+      }
+    
+      try {
+        const response = await fetch('/.netlify/functions/returnToChat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ threadId })
+        });
+    
+        if (!response.ok) {
+          throw new Error('Failed to retrieve chat information');
+        }
+    
+        const chatInfo = await response.json();
+        initializeChat(chatInfo.threadId, chatInfo.chatTitle, chatInfo.discordName);
+      } catch (error) {
+        console.error('Error returning to chat:', error);
+        alert('Failed to return to chat. Please check your Thread ID and try again.');
+      }
+    });
+
+    function initializeChat(threadId, chatTitle, userName, isReturning = false) {
         currentThreadId = threadId;
         currentChatTitle = chatTitle;
         currentUserName = userName;
@@ -97,7 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
         startPolling();
     
         setTimeout(() => {
-            addMessageToChat('Support', `Welcome to ${currentChatTitle}! How can we assist you today?`);
+            if (isReturning) {
+                addMessageToChat('Support', `Welcome back to your chat! Your Thread ID is ${threadId}. Please save this ID to return to this chat in the future.`);
+            } else {
+                addMessageToChat('Support', `Welcome to ${currentChatTitle}! Your Thread ID is ${threadId}. Please save this ID to return to this chat if you need to leave and come back later.`);
+            }
+            addMessageToChat('Support', `How can we assist you today?`);
         }, 1000);
     }
     

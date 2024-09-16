@@ -7,6 +7,19 @@
     <title>WoW Lua Scripting Service</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Adjust the size of the button */
+        .return-chat-container .btn {
+            padding: 8px 16px; /* Adjust as needed */
+            font-size: 14px;   /* Adjust as needed */
+            width: auto;       /* Make sure width is automatic */
+        }
+
+        /* Add spacing above the button */
+        .return-chat-container {
+            margin-bottom: 20px; /* Adjust spacing as needed */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -14,6 +27,10 @@
             <img src="images/favicon.png" alt="WoW Lua Scripting Icon" class="logo-img">
             <h1>WoW Lua Scripting Service</h1>
         </header>
+        <div class="return-chat-container">
+            <button id="returnToChatBtn" class="btn">Return to Live Chat</button>
+            <input type="text" id="threadIdInput" placeholder="Enter your Thread ID">
+        </div>
         <main>
             <div class="button-container">
                 <button id="newCustomerBtn" class="btn">New Customer</button>

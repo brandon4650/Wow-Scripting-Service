@@ -75,7 +75,7 @@ exports.handler = async (event) => {
     await axios.post(
       `https://discord.com/api/v10/channels/${threadData.id}/messages`,
       {
-        content: `${discordName}: [INVISIBLE_MESSAGE]`
+        content: `${discordName}: Your thread ID is ${threadData.id}. Please copy this ID to restore your chat if you exit. [INVISIBLE_MESSAGE]`
       },
       {
         headers: {
