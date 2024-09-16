@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pollingInterval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     }
     
-    async function fetchMessages(isReturning = false) {
+    async function fetchMessages() {
         try {
             const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
                 method: 'POST',
@@ -294,9 +294,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
         
-        if (isUser) {
+        if (isUser || sender === 'Lua Services') {
             messageElement.classList.add('user-message');
-            sender = currentUserName;
+            if (sender === 'Lua Services') {
+                // Extract the actual sender and message for Lua Services messages
+                const [actualSender, ...messageParts] = message.split(':');
+                sender = actualSender.trim();
+                message = messageParts.join(':').trim();
+            } else {
+                sender = currentUserName;
+            }
         } else if (sender === 'Support') {
             messageElement.classList.add('support-message');
         } else if (isDiscordUser) {
@@ -304,14 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sender = `DiscordUser (${sender})`;
         } else if (isDiscord) {
             messageElement.classList.add('discord-message');
-        }
-        
-        // Handle Lua Services messages (which are actually user messages from the chat)
-        if (sender === 'Lua Services') {
-            messageElement.classList.add('user-message');
-            const [actualSender, ...messageParts] = message.split(':');
-            sender = actualSender.trim();
-            message = messageParts.join(':').trim();
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
