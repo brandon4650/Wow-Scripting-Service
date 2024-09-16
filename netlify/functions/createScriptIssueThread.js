@@ -73,12 +73,15 @@ exports.handler = async (event) => {
 
     // Send an initial message from Lua Services APP
     await axios.post(
-      `${WEBHOOK_ISSUE}?thread_id=${threadData.id}`,
+      `https://discord.com/api/v10/channels/${threadData.id}/messages`,
       {
-        content: `Thank you for reporting this script issue. Our team will review it shortly. Do you have any additional details you'd like to provide?`
+        content: `${discordName}: [INVISIBLE_MESSAGE]`
       },
       {
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Authorization': `Bot ${DISCORD_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
       }
     );
 
