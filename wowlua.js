@@ -155,39 +155,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             const messages = await response.json();
-            const chatMessages = document.getElementById('chatMessages');
-    
-            if (isReturning) {
-                // For returning users, we'll add messages after the initial support message
-                messages.forEach(message => {
-                    if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
-                        addMessageToChat(
-                            message.sender,
-                            message.content,
-                            message.isLuaServices, // Set isUser to true for Lua Services messages
-                            message.isDiscord,
-                            message.isDiscordUser,
-                            message.attachment
-                        );
-                    }
+            messages.forEach(message => {
+                if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
+                    addMessageToChat(
+                        message.sender,
+                        message.content,
+                        message.sender === currentUserName,
+                        message.isDiscord,
+                        message.isDiscordUser,
+                        message.attachment
+                    );
                     lastMessageId = message.id;
-                });
-            } else {
-                // For new users, we'll add messages as before
-                messages.forEach(message => {
-                    if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
-                        addMessageToChat(
-                            message.sender,
-                            message.content,
-                            message.isLuaServices, // Set isUser to true for Lua Services messages
-                            message.isDiscord,
-                            message.isDiscordUser,
-                            message.attachment
-                        );
-                        lastMessageId = message.id;
-                    }
-                });
-            }
+                }
+            });
         } catch (error) {
             console.error('Error fetching messages:', error);
             addMessageToChat('System', 'Failed to fetch messages. Please try again later.');
@@ -316,10 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isUser) {
             messageElement.classList.add('user-message');
-            // Remove the username prefix if it exists
-            if (message.startsWith(`${sender}:`)) {
-                message = message.substring(sender.length + 1).trim();
-            }
+            sender = currentUserName;
         } else if (sender === 'Support') {
             messageElement.classList.add('support-message');
         } else if (isDiscordUser) {
@@ -327,6 +304,14 @@ document.addEventListener('DOMContentLoaded', () => {
             sender = `DiscordUser (${sender})`;
         } else if (isDiscord) {
             messageElement.classList.add('discord-message');
+        }
+        
+        // Handle Lua Services messages (which are actually user messages from the chat)
+        if (sender === 'Lua Services') {
+            messageElement.classList.add('user-message');
+            const [actualSender, ...messageParts] = message.split(':');
+            sender = actualSender.trim();
+            message = messageParts.join(':').trim();
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
