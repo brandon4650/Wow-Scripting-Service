@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     threadId: currentThreadId,
-                    userName: currentUserName, // Use currentUserName here
+                    userName: currentUserName,
                     content: message,
                     sendMessage: true
                 })
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to send message');
             }
     
-            addMessageToChat(currentUserName, message, true);
+            // Don't add the message to chat here, as it will be fetched and displayed by fetchMessages
             chatInput.value = '';
             fetchMessages(); // Fetch messages immediately after sending
         } catch (error) {
@@ -316,7 +316,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isUser) {
             messageElement.classList.add('user-message');
-            sender = currentUserName;
+            // Remove the username prefix if it exists
+            if (message.startsWith(`${sender}:`)) {
+                message = message.substring(sender.length + 1).trim();
+            }
         } else if (sender === 'Support') {
             messageElement.classList.add('support-message');
         } else if (isDiscordUser) {
@@ -324,12 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sender = `DiscordUser (${sender})`;
         } else if (isDiscord) {
             messageElement.classList.add('discord-message');
-        }
-        
-        // Extract the actual message content for Lua Services messages
-        if (sender === 'Lua Services' && message.includes(':')) {
-            const [, actualMessage] = message.split(':', 2);
-            message = actualMessage.trim();
         }
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
