@@ -123,21 +123,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const chatMessages = document.getElementById('chatMessages');
         chatMessages.innerHTML = '';
     
-        // Add welcome messages immediately
-        if (isReturning) {
-            addMessageToChat('Support', `Welcome back to your chat! Your Thread ID is ${threadId}. Please save this ID to return to this chat in the future.`);
-        } else {
-            addMessageToChat('Support', `Welcome to ${currentChatTitle}! Your Thread ID is ${threadId}. Please save this ID to return to this chat if you need to leave and come back later.`);
-            addMessageToChat('Support', `How can we assist you today?`);
-        }
-    
-        // For returning users, fetch all messages
-        if (isReturning) {
-            fetchMessages(true); // Pass true to indicate it's an initial load
-        }
-    
-        // Start polling for new messages
         startPolling();
+    
+        setTimeout(() => {
+            if (isReturning) {
+                addMessageToChat('Support', `Welcome back to your chat! Your Thread ID is ${threadId}. Please save this ID to return to this chat in the future.`);
+            } else {
+                addMessageToChat('Support', `Welcome to ${currentChatTitle}! Your Thread ID is ${threadId}. Please save this ID to return to this chat if you need to leave and come back later.`);
+            }
+            addMessageToChat('Support', `How can we assist you today?`);
+        }, 1000);
     }
     
     function startPolling() {
@@ -146,16 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
         pollingInterval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     }
     
-    async function fetchMessages(isInitialLoad = false) {
+    async function fetchMessages() {
         try {
             const response = await fetch('/.netlify/functions/fetchDiscordMessages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    threadId: currentThreadId, 
-                    userName: currentUserName, 
-                    lastMessageId: isInitialLoad ? null : lastMessageId
-                })
+                body: JSON.stringify({ threadId: currentThreadId, userName: currentUserName, lastMessageId })
             });
     
             if (!response.ok) {
@@ -163,23 +154,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             const messages = await response.json();
-            if (messages.length > 0) {
-                if (isInitialLoad) {
-                    chatMessages.innerHTML = ''; // Clear existing messages if this is the initial load
-                }
-                messages.forEach(message => {
+            messages.forEach(message => {
+                if (!message.isLuaServices) {
                     addMessageToChat(
                         message.sender, 
                         message.content, 
-                        message.sender === currentUserName,
+                        false, 
                         message.isDiscord, 
                         message.isDiscordUser, 
-                        message.attachment,
-                        isInitialLoad
+                        message.attachment
                     );
                     lastMessageId = message.id;
-                });
-            }
+                }
+            });
         } catch (error) {
             console.error('Error fetching messages:', error);
             addMessageToChat('System', 'Failed to fetch messages. Please try again later.');
@@ -301,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false, attachment = null, isInitialLoad = false) {
+    function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false, attachment = null) {
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
@@ -313,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageElement.classList.add('support-message');
         } else if (isDiscordUser) {
             messageElement.classList.add('discord-user-message');
+            sender = `DiscordUser (${sender})`;
         } else if (isDiscord) {
             messageElement.classList.add('discord-message');
         }
@@ -326,14 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageElement.appendChild(downloadButton);
         }
         
-        if (isInitialLoad && sender === 'Support') {
-            // Insert support messages at the top during initial load
-            chatMessages.insertBefore(messageElement, chatMessages.firstChild);
-        } else {
-            // Append other messages to the end
-            chatMessages.appendChild(messageElement);
-        }
-        
+        chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     
