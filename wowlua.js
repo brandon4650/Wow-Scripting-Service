@@ -169,13 +169,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            const donateButton = document.querySelector('.donate-button');
             if (paymentEnabled) {
-                const donateButton = document.createElement('a');
-                donateButton.href = 'https://paypal.me/short4650';
-                donateButton.target = '_blank';
-                donateButton.classList.add('donate-button');
-                donateButton.textContent = 'Donate';
-                chatMessages.appendChild(donateButton);
+                if (!donateButton) {
+                    const newDonateButton = document.createElement('a');
+                    newDonateButton.href = 'https://paypal.me/short4650';
+                    newDonateButton.target = '_blank';
+                    newDonateButton.classList.add('donate-button');
+                    newDonateButton.textContent = 'Donate';
+                    chatMessages.appendChild(newDonateButton);
+                }
+            } else {
+                if (donateButton) {
+                    donateButton.remove();
+                }
             }
         } catch (error) {
             console.error('Error fetching messages:', error);

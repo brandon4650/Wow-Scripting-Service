@@ -75,10 +75,9 @@ async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUs
                         contentType: msg.attachments[0].content_type
                     } : null
                 }))
-                .reverse(), // Reverse the order to get oldest messages first
-            paymentEnabled: response.data.some(msg => msg.content.includes('#Enable Payment')) 
-            
-                };
+                .reverse(),
+            paymentEnabled: response.data.some(msg => msg.author.id === repUserId && msg.content.includes('#Enable Payment'))
+        };
     } catch (error) {
         console.error('Error fetching messages from Discord:', error);
         throw error;
