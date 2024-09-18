@@ -301,6 +301,22 @@ input, select, textarea {
     border-bottom: 1px solid var(--secondary-color);
 }
 
+.donate-button {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 1em;
+    align-self: center;
+}
+
+.donate-button:hover {
+    background-color: #0077b6;
+}
+
 @media (max-width: 480px) {
     .button-container {
         flex-direction: column;
@@ -322,32 +338,6 @@ input, select, textarea {
 
 #chatTitle {
     font-size: 1.1em;
-}
-
-.embed-message {
-    background-color: #f0f0f0;
-    border-radius: 5px;
-    padding: 10px;
-    margin-top: 5px;
-}
-
-.embed-message h3 {
-    margin-top: 0;
-    color: #0099ff;
-}
-
-.payment-link {
-    display: inline-block;
-    background-color: #0099ff;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 3px;
-    text-decoration: none;
-    margin-top: 10px;
-}
-
-.payment-link:hover {
-    background-color: #007acc;
 }
 
 @media (max-width: 768px) {

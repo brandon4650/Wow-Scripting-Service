@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(issueForm);
         const issueData = Object.fromEntries(formData.entries());
         
+        // Log the form data
         console.log('Submitting issue data:', issueData);
     
         try {
@@ -102,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
       
           const chatInfo = await response.json();
-          initializeChat(chatInfo.threadId, chatInfo.chatTitle, chatInfo.discordName, true);
+          initializeChat(chatInfo.threadId, chatInfo.chatTitle, chatInfo.discordName, true); // Pass true for isReturning
         } catch (error) {
           console.error('Error returning to chat:', error);
           alert('Failed to return to chat. Please check your Thread ID and try again. If that doesnt work, then ticket/thread may have been closed or resolved');
@@ -113,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentThreadId = threadId;
         currentChatTitle = chatTitle;
         currentUserName = userName;
-        lastMessageId = null;
+        lastMessageId = null; // Reset lastMessageId when initializing chat
     
         chatWindow.style.display = 'flex';
         const chatTitleElement = document.getElementById('chatTitle');
@@ -124,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         if (isReturning) {
             addMessageToChat('Support', `Welcome back to your chat! Your Thread ID is ${threadId}. Please save this ID to return to this chat in the future.`);
-            fetchMessages(true);
+            fetchMessages(true); // Pass true to indicate it's a returning user
         } else {
             setTimeout(() => {
                 addMessageToChat('Support', `Welcome to ${currentChatTitle}! Your Thread ID is ${threadId}. Please save this ID to return to this chat if you need to leave and come back later.`);
@@ -137,8 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function startPolling() {
         fetchMessages();
-        clearInterval(pollingInterval);
-        pollingInterval = setInterval(fetchMessages, 3000);
+        clearInterval(pollingInterval); // Clear any existing interval
+        pollingInterval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     }
     
     async function fetchMessages() {
@@ -153,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to fetch messages');
             }
     
-            const messages = await response.json();
+            const { messages, paymentEnabled } = await response.json();
             messages.forEach(message => {
                 if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
                     addMessageToChat(
@@ -162,12 +163,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         message.sender === currentUserName,
                         message.isDiscord,
                         message.isDiscordUser,
-                        message.attachment,
-                        message.embed
+                        message.attachment
                     );
                     lastMessageId = message.id;
                 }
             });
+
+            if (paymentEnabled) {
+                const donateButton = document.createElement('a');
+                donateButton.href = 'https://paypal.me/short4650';
+                donateButton.target = '_blank';
+                donateButton.classList.add('donate-button');
+                donateButton.textContent = 'Donate';
+                chatMessages.appendChild(donateButton);
+            }
         } catch (error) {
             console.error('Error fetching messages:', error);
             addMessageToChat('System', 'Failed to fetch messages. Please try again later.');
@@ -191,8 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to send message');
             }
     
+            // Don't add the message to chat here, as it will be fetched and displayed by fetchMessages
             chatInput.value = '';
-            fetchMessages();
+            fetchMessages(); // Fetch messages immediately after sending
         } catch (error) {
             console.error('Error sending message:', error);
             addMessageToChat('System', 'Failed to send message. Please try again later.');
@@ -263,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             addMessageToChat(currentUserName, `Sent file: ${fileName}`, true);
-            fileItem.remove();
+            fileItem.remove(); // Remove the file item after sending
         } catch (error) {
             console.error('Error sending file:', error);
             addMessageToChat('System', 'Failed to send file. Please try again later.');
@@ -288,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false, attachment = null, embed = null) {
+    function addMessageToChat(sender, message, isUser = false, isDiscord = false, isDiscordUser = false, attachment = null) {
         const chatMessages = document.getElementById('chatMessages');
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
@@ -296,6 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isUser || sender === 'Lua Services') {
             messageElement.classList.add('user-message');
             if (sender === 'Lua Services') {
+                // Extract the actual sender and message for Lua Services messages
                 const [actualSender, ...messageParts] = message.split(':');
                 sender = actualSender.trim();
                 message = messageParts.join(':').trim();
@@ -311,16 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageElement.classList.add('discord-message');
         }
         
-        if (embed) {
-            messageElement.innerHTML = `<strong>${sender}:</strong><br>
-                <div class="embed-message">
-                    <h3>${embed.title}</h3>
-                    <p>${embed.description}</p>
-                    <a href="${embed.fields[0].value}" target="_blank" class="payment-link">Make Payment</a>
-                </div>`;
-        } else {
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-        }
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         
         if (attachment && (attachment.filename.endsWith('.lua') || attachment.filename.endsWith('.txt'))) {
             const downloadButton = document.createElement('button');
