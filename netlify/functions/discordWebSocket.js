@@ -50,7 +50,7 @@ client.on('interactionCreate', async interaction => {
         }
 
         const amount = options.getNumber('amount');
-        const paypalLink = `https://www.paypal.com/paypalme/short4650/${amount}`;
+        const paypalLink = `https://www.paypal.me/short4650/$${amount}`;
 
         const embed = new MessageEmbed()
             .setColor('#0099ff')
