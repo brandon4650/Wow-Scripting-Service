@@ -324,6 +324,32 @@ input, select, textarea {
     font-size: 1.1em;
 }
 
+.embed-message {
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+.embed-message h3 {
+    margin-top: 0;
+    color: #0099ff;
+}
+
+.payment-link {
+    display: inline-block;
+    background-color: #0099ff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    text-decoration: none;
+    margin-top: 10px;
+}
+
+.payment-link:hover {
+    background-color: #007acc;
+}
+
 @media (max-width: 768px) {
     main {
         flex-direction: column;
