@@ -301,22 +301,6 @@ input, select, textarea {
     border-bottom: 1px solid var(--secondary-color);
 }
 
-.donate-button {
-    display: inline-block;
-    background-color: var(--primary-color);
-    color: var(--text-color);
-    text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    margin-top: 10px;
-    font-size: 1em;
-    align-self: center;
-}
-
-.donate-button:hover {
-    background-color: #0077b6;
-}
-
 @media (max-width: 480px) {
     .button-container {
         flex-direction: column;

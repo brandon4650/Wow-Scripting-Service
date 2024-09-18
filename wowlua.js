@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to fetch messages');
             }
     
-            const { messages, paymentEnabled } = await response.json();
+            const messages = await response.json();
             messages.forEach(message => {
                 if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
                     addMessageToChat(
@@ -168,22 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     lastMessageId = message.id;
                 }
             });
-
-            const donateButton = document.querySelector('.donate-button');
-            if (paymentEnabled) {
-                if (!donateButton) {
-                    const newDonateButton = document.createElement('a');
-                    newDonateButton.href = 'https://paypal.me/short4650';
-                    newDonateButton.target = '_blank';
-                    newDonateButton.classList.add('donate-button');
-                    newDonateButton.textContent = 'Donate';
-                    chatMessages.appendChild(newDonateButton);
-                }
-            } else {
-                if (donateButton) {
-                    donateButton.remove();
-                }
-            }
         } catch (error) {
             console.error('Error fetching messages:', error);
             addMessageToChat('System', 'Failed to fetch messages. Please try again later.');

@@ -59,25 +59,22 @@ async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUs
             params: params
         });
 
-        return {
-            messages: response.data
-                .filter(msg => (msg.content.trim() !== '' && msg.content !== '[INITIAL_MESSAGE]') || (msg.attachments && msg.attachments.length > 0))
-                .map(msg => ({
-                    id: msg.id,
-                    sender: msg.author.id === repUserId ? 'Support' : msg.author.username,
-                    content: msg.content,
-                    isDiscord: true,
-                    isDiscordUser: msg.author.id !== repUserId && msg.author.username !== 'Lua Services',
-                    isLuaServices: msg.author.username === 'Lua Services',
-                    attachment: msg.attachments && msg.attachments.length > 0 ? {
-                        filename: msg.attachments[0].filename,
-                        url: msg.attachments[0].url,
-                        contentType: msg.attachments[0].content_type
-                    } : null
-                }))
-                .reverse(),
-            paymentEnabled: response.data.some(msg => msg.author.id === repUserId && msg.content.includes('#Enable Payment'))
-        };
+        return response.data
+            .filter(msg => (msg.content.trim() !== '' && msg.content !== '[INITIAL_MESSAGE]') || (msg.attachments && msg.attachments.length > 0))
+            .map(msg => ({
+                id: msg.id,
+                sender: msg.author.id === repUserId ? 'Support' : msg.author.username,
+                content: msg.content,
+                isDiscord: true,
+                isDiscordUser: msg.author.id !== repUserId && msg.author.username !== 'Lua Services',
+                isLuaServices: msg.author.username === 'Lua Services',
+                attachment: msg.attachments && msg.attachments.length > 0 ? {
+                    filename: msg.attachments[0].filename,
+                    url: msg.attachments[0].url,
+                    contentType: msg.attachments[0].content_type
+                } : null
+            }))
+            .reverse(); // Reverse the order to get oldest messages first
     } catch (error) {
         console.error('Error fetching messages from Discord:', error);
         throw error;
