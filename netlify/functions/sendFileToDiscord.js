@@ -20,8 +20,14 @@ exports.handler = async (event) => {
     try {
         const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
         
+        // Determine file type
+        const fileExtension = fileName.split('.').pop().toLowerCase();
+        const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension);
+        
         // Create a buffer from the file content
-        const buffer = Buffer.from(fileContent, 'utf-8');
+        const buffer = isImage 
+            ? Buffer.from(fileContent.split(',')[1], 'base64')
+            : Buffer.from(fileContent, 'utf-8');
 
         // Create a FormData object
         const form = new FormData();

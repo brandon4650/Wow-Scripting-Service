@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(issueForm);
         const issueData = Object.fromEntries(formData.entries());
         
-        // Log the form data
         console.log('Submitting issue data:', issueData);
     
         try {
@@ -191,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to send message');
             }
     
-            // Don't add the message to chat here, as it will be fetched and displayed by fetchMessages
             chatInput.value = '';
             fetchMessages(); // Fetch messages immediately after sending
         } catch (error) {
@@ -224,17 +222,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fileName = file.name;
                 addFileToChat(fileName, fileContent);
             };
-            reader.readAsText(file);
+            if (file.type.startsWith('image/')) {
+                reader.readAsDataURL(file);
+            } else {
+                reader.readAsText(file);
+            }
         }
     });
 
     function addFileToChat(fileName, fileContent) {
         const fileItem = document.createElement('div');
         fileItem.classList.add('file-item');
-        fileItem.innerHTML = `
-            <span>${fileName}</span>
-            <button onclick="sendFile('${fileName}')">Send</button>
-        `;
+        
+        const isImage = fileName.match(/\.(jpeg|jpg|gif|png)$/) != null;
+        
+        if (isImage) {
+            fileItem.innerHTML = `
+                <img src="${fileContent}" alt="${fileName}" style="max-width: 100px; max-height: 100px;">
+                <span>${fileName}</span>
+                <button onclick="sendFile('${fileName}')">Send</button>
+            `;
+        } else {
+            fileItem.innerHTML = `
+                <span>${fileName}</span>
+                <button onclick="sendFile('${fileName}')">Send</button>
+            `;
+        }
+        
         fileItem.dataset.content = fileContent;
         uploadedFiles.appendChild(fileItem);
     }
@@ -297,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isUser || sender === 'Lua Services') {
             messageElement.classList.add('user-message');
             if (sender === 'Lua Services') {
-                // Extract the actual sender and message for Lua Services messages
                 const [actualSender, ...messageParts] = message.split(':');
                 sender = actualSender.trim();
                 message = messageParts.join(':').trim();
@@ -315,11 +328,20 @@ document.addEventListener('DOMContentLoaded', () => {
         
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         
-        if (attachment && (attachment.filename.endsWith('.lua') || attachment.filename.endsWith('.txt'))) {
-            const downloadButton = document.createElement('button');
-            downloadButton.textContent = `Download ${attachment.filename}`;
-            downloadButton.onclick = () => downloadFile(attachment.url, attachment.filename);
-            messageElement.appendChild(downloadButton);
+        if (attachment) {
+            if (attachment.contentType && attachment.contentType.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = attachment.url;
+                img.alt = attachment.filename;
+                img.style.maxWidth = '200px';
+                img.style.maxHeight = '200px';
+                messageElement.appendChild(img);
+            } else {
+                const downloadButton = document.createElement('button');
+                downloadButton.textContent = `Download ${attachment.filename}`;
+                downloadButton.onclick = () => downloadFile(attachment.url, attachment.filename);
+                messageElement.appendChild(downloadButton);
+            }
         }
         
         chatMessages.appendChild(messageElement);
