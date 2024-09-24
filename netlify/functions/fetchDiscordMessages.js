@@ -10,6 +10,7 @@ exports.handler = async (event) => {
     const { threadId, userName, lastMessageId, sendMessage, content } = JSON.parse(event.body);
     const discordBotToken = process.env.DISCORD_TOKEN;
     const repUserId = '643915314329026561'; // Your Discord user ID
+    const paypalUsername = 'short4650'; // Your PayPal.me username
 
     if (!discordBotToken) {
         console.error('DISCORD_TOKEN is not set');
@@ -24,7 +25,7 @@ exports.handler = async (event) => {
             await sendMessageToDiscord(threadId, userName, content);
         }
         
-        const messages = await fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUserId);
+        const messages = await fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUserId, paypalUsername);
         return {
             statusCode: 200,
             body: JSON.stringify(messages),
@@ -41,7 +42,7 @@ exports.handler = async (event) => {
     }
 };
 
-async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUserId) {
+async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUserId, paypalUsername) {
     const discordBotToken = process.env.DISCORD_TOKEN;
     const discordApiUrl = `https://discord.com/api/v10/channels/${threadId}/messages`;
     
@@ -61,19 +62,26 @@ async function fetchMessagesFromDiscord(threadId, userName, lastMessageId, repUs
 
         return response.data
             .filter(msg => (msg.content.trim() !== '' && msg.content !== '[INITIAL_MESSAGE]') || (msg.attachments && msg.attachments.length > 0))
-            .map(msg => ({
-                id: msg.id,
-                sender: msg.author.id === repUserId ? 'Support' : msg.author.username,
-                content: msg.content,
-                isDiscord: true,
-                isDiscordUser: msg.author.id !== repUserId && msg.author.username !== 'Lua Services',
-                isLuaServices: msg.author.username === 'Lua Services',
-                attachment: msg.attachments && msg.attachments.length > 0 ? {
-                    filename: msg.attachments[0].filename,
-                    url: msg.attachments[0].url,
-                    contentType: msg.attachments[0].content_type
-                } : null
-            }))
+            .map(msg => {
+                let content = msg.content;
+                if (msg.author.id === repUserId && content.startsWith('/pay ')) {
+                    const amount = content.split(' ')[1];
+                    content = `Payment requested: $${amount} - [Pay with PayPal](https://www.paypal.com/paypalme/${paypalUsername}/${amount})`;
+                }
+                return {
+                    id: msg.id,
+                    sender: msg.author.id === repUserId ? 'Support' : msg.author.username,
+                    content: content,
+                    isDiscord: true,
+                    isDiscordUser: msg.author.id !== repUserId && msg.author.username !== 'Lua Services',
+                    isLuaServices: msg.author.username === 'Lua Services',
+                    attachment: msg.attachments && msg.attachments.length > 0 ? {
+                        filename: msg.attachments[0].filename,
+                        url: msg.attachments[0].url,
+                        contentType: msg.attachments[0].content_type
+                    } : null
+                };
+            })
             .reverse(); // Reverse the order to get oldest messages first
     } catch (error) {
         console.error('Error fetching messages from Discord:', error);

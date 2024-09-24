@@ -326,6 +326,14 @@ document.addEventListener('DOMContentLoaded', () => {
             messageElement.classList.add('discord-message');
         }
         
+        // Check if the message contains a PayPal link
+        if (message.includes('Payment requested:')) {
+            const parts = message.split('[');
+            const linkPart = parts[1].split(']')[0];
+            const url = linkPart.split('(')[1].split(')')[0];
+            message = `${parts[0]}<a href="${url}" target="_blank">Pay with PayPal</a>`;
+        }
+        
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
         
         if (attachment) {
