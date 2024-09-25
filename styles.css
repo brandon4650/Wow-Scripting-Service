@@ -270,6 +270,23 @@ input, select, textarea {
     cursor: pointer;
 }
 
+.typing-indicator {
+    padding: 10px;
+    background-color: var(--message-bg);
+    color: var(--text-color);
+    border-radius: 18px;
+    font-size: 0.9em;
+    margin-top: 10px;
+    display: none;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
 @media (max-width: 480px) {
     .button-container {
         flex-direction: column;

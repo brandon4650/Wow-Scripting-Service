@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentThreadId, currentChatTitle, currentUserName;
     let lastMessageId = null;
     let pollingInterval;
+    let ws;
+    let typingTimeout;
 
     newCustomerBtn.addEventListener('click', () => {
         newCustomerModal.style.display = 'block';
@@ -133,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         startPolling();
+        connectWebSocket();
     }
     
     function startPolling() {
@@ -365,6 +368,46 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     
+    function connectWebSocket() {
+        ws = new WebSocket('wss://your-websocket-url.com');
+
+        ws.onopen = () => {
+            console.log('WebSocket connected');
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'typing' && data.threadId === currentThreadId) {
+                showTypingIndicator(data.user);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket disconnected. Reconnecting...');
+            setTimeout(connectWebSocket, 5000);
+        };
+    }
+
+    function showTypingIndicator(user) {
+        const chatMessages = document.getElementById('chatMessages');
+        let typingElement = document.getElementById('typingIndicator');
+        
+        if (!typingElement) {
+            typingElement = document.createElement('div');
+            typingElement.id = 'typingIndicator';
+            typingElement.classList.add('typing-indicator');
+            chatMessages.appendChild(typingElement);
+        }
+        
+        typingElement.textContent = `${user} is typing...`;
+        typingElement.style.display = 'block';
+        
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            typingElement.style.display = 'none';
+        }, 3000);
+    }
+    
     document.querySelectorAll('.close').forEach(closeBtn => {
         closeBtn.onclick = function() {
             this.closest('.modal, .chat-window').style.display = 'none';
@@ -376,4 +419,15 @@ document.addEventListener('DOMContentLoaded', () => {
             event.target.style.display = 'none';
         }
     };
+
+    // Event listener for chat input to handle Enter key press
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatBtn.click();
+        }
+    });
+
+    // Initialize WebSocket connection when the page loads
+    connectWebSocket();
 });
