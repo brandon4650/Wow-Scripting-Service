@@ -123,12 +123,17 @@
 
         <div id="chatWindow" class="chat-window">
             <span class="close">&times;</span>
-            <h3 id="chatTitle"></h3>
+            <div class="chat-header">
+                <div id="chatTitle"></div>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Active</span>
+                </div>
+            </div>
             <div id="chatMessages" class="chat-messages"></div>
             <div class="chat-input-container">
                 <input type="text" id="chatInput" placeholder="Type your message...">
                 <button id="sendChatBtn">Send</button>
-                <input type="file" id="fileUpload" accept=".lua,.txt" style="display: none;">
                 <button id="uploadBtn">Upload File</button>
             </div>
             <div id="uploadedFiles" class="uploaded-files"></div>

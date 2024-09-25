@@ -143,6 +143,19 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(pollingInterval); // Clear any existing interval
         pollingInterval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     }
+
+    function setActiveStatus(isActive) {
+        const statusDot = document.querySelector('.status-dot');
+        const statusText = document.querySelector('.status-text');
+        
+        if (isActive) {
+            statusDot.style.backgroundColor = '#2ecc71';
+            statusText.textContent = 'Active';
+        } else {
+            statusDot.style.backgroundColor = '#e74c3c';
+            statusText.textContent = 'Inactive';
+        }
+    }
     
     async function fetchMessages() {
         try {
@@ -387,26 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(connectWebSocket, 5000);
         };
     }
-
-    function showTypingIndicator(user) {
-        const chatMessages = document.getElementById('chatMessages');
-        let typingElement = document.getElementById('typingIndicator');
-        
-        if (!typingElement) {
-            typingElement = document.createElement('div');
-            typingElement.id = 'typingIndicator';
-            typingElement.classList.add('typing-indicator');
-            chatMessages.appendChild(typingElement);
-        }
-        
-        typingElement.textContent = `${user} is typing...`;
-        typingElement.style.display = 'block';
-        
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-            typingElement.style.display = 'none';
-        }, 3000);
-    }
+    
     
     document.querySelectorAll('.close').forEach(closeBtn => {
         closeBtn.onclick = function() {
@@ -419,15 +413,4 @@ document.addEventListener('DOMContentLoaded', () => {
             event.target.style.display = 'none';
         }
     };
-
-    // Event listener for chat input to handle Enter key press
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendChatBtn.click();
-        }
-    });
-
-    // Initialize WebSocket connection when the page loads
-    connectWebSocket();
 });

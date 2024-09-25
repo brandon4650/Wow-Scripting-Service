@@ -166,12 +166,38 @@ input, select, textarea {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--primary-color);
+    padding: 15px;
+}
+
 #chatTitle {
     background-color: var(--primary-color);
     color: var(--text-color);
     padding: 15px;
     font-size: 1.2em;
     font-weight: bold;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-text {
+    font-size: 0.8em;
+    color: var(--text-color);
 }
 
 .chat-messages {
@@ -270,22 +296,6 @@ input, select, textarea {
     cursor: pointer;
 }
 
-.typing-indicator {
-    padding: 10px;
-    background-color: var(--message-bg);
-    color: var(--text-color);
-    border-radius: 18px;
-    font-size: 0.9em;
-    margin-top: 10px;
-    display: none;
-    animation: blink 1s infinite;
-}
-
-@keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
 
 @media (max-width: 480px) {
     .button-container {

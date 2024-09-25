@@ -1,5 +1,4 @@
 const { Client, Intents } = require('discord.js');
-const WebSocket = require('ws');
 
 const client = new Client({ 
     intents: [
@@ -9,8 +8,6 @@ const client = new Client({
         Intents.FLAGS.MESSAGE_CONTENT
     ] 
 });
-
-const wss = new WebSocket.Server({ port: 8080 });
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -22,32 +19,7 @@ client.on('messageCreate', message => {
     // Implement your message handling logic here
 });
 
-client.on('typingStart', (typing) => {
-    if (typing.user.bot) return; // Ignore typing events from bots
-    
-    const typingData = {
-        type: 'typing',
-        threadId: typing.channel.id,
-        user: typing.user.username
-    };
-    
-    wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(typingData));
-        }
-    });
-});
-
 client.login(process.env.DISCORD_TOKEN);
-
-wss.on('connection', (ws) => {
-    console.log('New WebSocket connection');
-    
-    ws.on('message', (message) => {
-        console.log('Received message:', message);
-        // Handle incoming messages if needed
-    });
-});
 
 exports.handler = async function(event, context) {
     // This function will be called by Netlify, but we're using it to keep the bot running
