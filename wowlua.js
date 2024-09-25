@@ -150,12 +150,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     
             if (!response.ok) {
-                throw new Error('Failed to fetch messages');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
     
             const messages = await response.json();
+            if (!Array.isArray(messages)) {
+                console.error('Unexpected response format:', messages);
+                return;
+            }
+    
             messages.forEach(message => {
-                if (!message.content.includes('[INVISIBLE_MESSAGE]')) {
+                if (message && !message.content.includes('[INVISIBLE_MESSAGE]')) {
                     addMessageToChat(
                         message.sender,
                         message.content,
@@ -171,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching messages:', error);
             addMessageToChat('System', 'Failed to fetch messages. Please try again later.');
         }
-    }    
+    }
     
     async function sendMessage(message) {
         try {
@@ -310,10 +315,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isUser || sender === 'Lua Services') {
             messageElement.classList.add('user-message');
-            if (sender === 'Lua Services') {
-                const [actualSender, ...messageParts] = message.split(':');
-                sender = actualSender.trim();
-                message = messageParts.join(':').trim();
+            if (sender === 'Lua Services' && typeof message === 'string') {
+                const colonIndex = message.indexOf(':');
+                if (colonIndex !== -1) {
+                    sender = message.substring(0, colonIndex).trim();
+                    message = message.substring(colonIndex + 1).trim();
+                }
             } else {
                 sender = currentUserName;
             }
@@ -327,12 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Check if the message contains a PayPal link
-        if (message.includes('Payment requested:')) {
-            const parts = message.split('[');
-            if (parts.length > 1) {
-                const linkPart = parts[1].split(']')[0];
-                const url = linkPart.split('(')[1].split(')')[0];
-                message = `${parts[0]}<a href="${url}" target="_blank">Pay with PayPal</a>`;
+        if (typeof message === 'string' && message.includes('Payment requested:')) {
+            const paymentRegex = /Payment requested: \$(\d+(?:\.\d{2})?) - \[Pay with PayPal\]\((https:\/\/www\.paypal\.com\/paypalme\/[^\/]+\/\d+(?:\.\d{2})?)\)/;
+            const match = message.match(paymentRegex);
+            if (match) {
+                const [fullMatch, amount, url] = match;
+                message = `Payment requested: $${amount} - <a href="${url}" target="_blank">Pay with PayPal</a>`;
             }
         }
         
